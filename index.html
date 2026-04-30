@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>Teacher Edition: TAG-OF-WAR Game</title>
+    <style>
+        :root {
+            --primary-font: 'Century Gothic', sans-serif;
+            --font-weight: bold;
+            --team1-color: #E63946;
+            --team1-bg: #FFEAEA;
+            --team2-color: #2A9D8F;
+            --team2-bg: #E8F8F5;
+            --accent-color: #F4A261;
+            --text-dark: #264653;
+            --settings-bg: #F8F9FA;
+        }
+
+        body {
+            font-family: var(--primary-font) !important;
+            font-weight: var(--font-weight) !important;
+            margin: 0;
+            padding: 0;
+            background-color: #F1F2F6;
+            text-align: center;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            touch-action: none; 
+        }
+        
+        h1, h2, h3, button, input, select, .card {
+            font-family: inherit;
+            font-weight: inherit;
+        }
+
+        h1 {
+            color: var(--text-dark);
+            margin: 10px 0;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 0 #fff;
+            z-index: 10;
+        }
+
+        /* --- Controls & UI --- */
+        #in-game-controls {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: none;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background-color: #457B9D;
+            color: white;
+            border: 3px solid var(--text-dark);
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--text-dark);
+            margin-right: 10px;
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+
+        .control-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 var(--text-dark);
+        }
+
+        /* Volume Control */
+        #volume-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 3px solid var(--text-dark);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        #vol-slider { cursor: pointer; }
+
+        /* --- Status Message --- */
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 300;
+            max-width: 300px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .status-message.success { background-color: #2ED573; color: white; border: 3px solid #218c4b; }
+        .status-message.error { background-color: #E63946; color: white; border: 3px solid #9b222a; }
+        .status-message.info { background-color: #457B9D; color: white; border: 3px solid #264653; }
+
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+
+        /* --- Screens --- */
+        #start-screen, #settings-screen, #win-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        #settings-screen {
+            background: var(--settings-bg);
+            justify-content: flex-start;
+            overflow-y: auto;
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+            touch-action: auto; 
+        }
+
+        h2 { font-size: 3rem; color: var(--text-dark); margin-bottom: 20px; text-align: center; }
+
+        button.action-btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: 4px solid var(--text-dark);
+            padding: 15px 40px;
+            font-size: 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--text-dark);
+            transition: all 0.1s;
+            margin: 10px;
+        }
+        button.action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--text-dark); }
+        
+        button.settings-btn {
+            background-color: #A8DADC;
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            padding: 10px 20px;
+        }
+
+        /* --- Teacher Settings UI --- */
+        .settings-panel {
+            background: white;
+            border: 4px solid var(--text-dark);
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 900px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: #f1f2f6;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: left;
+            gap: 10px;
+        }
+
+        .settings-row input[type="text"], .settings-row select {
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 1.2rem;
+        }
+        .settings-row input[type="text"] { width: 35%; }
+
+        .settings-row input[type="file"] {
+            font-size: 1rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .img-preview-box { display: flex; align-items: center; gap: 10px; width: 45%; }
+        .img-preview-box img {
+            width: 50px; height: 50px; object-fit: contain; 
+            border-radius: 8px; border: 2px solid var(--text-dark); background: #ddd;
+        }
+        
+        #arena-preview { width: 120px; height: 60px; object-fit: contain; }
+
+        .delete-btn { background: #E63946; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; width: 15%;}
+        .add-btn { background: #2A9D8F; color: white; border: 2px solid var(--text-dark); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; width: 100%; margin-top: 10px; }
+        
+        .io-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .io-btn { background: #457B9D; color: white; border: 2px solid var(--text-dark); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem;}
+
+        .score-input-container { margin: 10px 0 20px 0; font-size: 1.5rem; color: var(--text-dark); display: flex; align-items: center; justify-content: center; gap: 15px;}
+        .score-input-container input { font-size: 1.5rem; width: 60px; text-align: center; border: 3px solid var(--text-dark); border-radius: 10px; }
+
+        /* --- Main Layout --- */
+        #main-layout {
+            display: none; 
+            width: 100%;
+            flex: 1;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .team-column {
+            width: 25%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 20px 10px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        #team1 { border: 5px solid var(--team1-color); background: var(--team1-bg); }
+        #team2 { border: 5px solid var(--team2-color); background: var(--team2-bg); }
+
+        /* Score Display UI */
+        .team-score {
+            font-size: 1.8rem;
+            color: white;
+            background-color: var(--text-dark);
+            padding: 5px 25px;
+            border-radius: 30px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.15s ease-out;
+        }
+
+        #arena-container {
+            width: 40%; max-width: 600px; aspect-ratio: 1 / 1; 
+            position: relative; background: #ffffff; border: 6px solid var(--text-dark);
+            border-radius: 30px; box-shadow: inset 0 0 25px rgba(0,0,0,0.15); overflow: hidden;
+            display: flex; align-items: center;
+        }
+
+        .vertical-line { position: absolute; top: 0; bottom: 0; width: 0; z-index: 3; }
+        #win-line-left { left: 30%; border-left: 6px solid var(--team1-color); transform: translateX(-50%); box-shadow: 0 0 10px var(--team1-color); }
+        #center-line { left: 50%; border-left: 4px dashed rgba(38, 70, 83, 0.5); transform: translateX(-50%); }
+        #win-line-right { left: 70%; border-left: 6px solid var(--team2-color); transform: translateX(-50%); box-shadow: 0 0 10px var(--team2-color); }
+
+        #tug-group {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 2; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            height: 40%; display: flex; justify-content: center; align-items: center; width: 250%; 
+        }
+        #tug-group img { height: 100%; width: auto; display: block; pointer-events: none; }
+
+        /* --- Team UI Elements --- */
+        .team-title { font-size: 2.2rem; margin: 0 0 10px 0; color: var(--text-dark); text-shadow: 1px 1px 0 #fff; }
+        .question { font-size: 1.5rem; margin: 5px 0; color: #333; }
+
+        .photo-display {
+            width: 140px; height: 140px; margin: 10px 0 20px 0;
+            background-color: #fff; border: 6px solid #fff; border-bottom-width: 20px; border-radius: 5px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
+        }
+        .photo-display img { width: 100%; height: 100%; object-fit: cover; background: #eee; }
+
+        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; }
+
+        .card {
+            background-color: #fff; border: 4px solid var(--text-dark); border-radius: 12px;
+            padding: 10px; font-size: 1.3rem; cursor: pointer; box-shadow: 0 5px 0 var(--text-dark);
+            transition: transform 0.05s, box-shadow 0.05s; display: flex; justify-content: center; align-items: center;
+            height: 40px; user-select: none; -webkit-user-select: none; text-align: center;
+        }
+
+        .card:active, .card.pressed { transform: translateY(5px); box-shadow: 0 0 0 var(--text-dark) !important; }
+        .card.correct { background-color: #2ED573; color: white; border-color: #218c4b; }
+        .card.wrong { background-color: #E63946; color: white; border-color: #9b222a; }
+        .card.disabled { opacity: 0.7; pointer-events: none; }
+
+        #win-overlay { display: none; }
+        #win-text { font-size: 5rem; color: var(--text-dark); margin-bottom: 20px; text-shadow: 3px 3px var(--accent-color); text-align: center; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shake { animation: shake 0.3s ease-in-out; }
+        
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        .burst { position: absolute; top: 50%; width: 100px; height: 100px; border-radius: 50%; transform: translate(-50%, -50%); animation: pop 0.4s ease-out forwards; pointer-events: none; z-index: 1; }
+
+        @media (max-width: 1024px) {
+            .team-column { width: 30%; }
+            #arena-container { width: 35%; }
+            .team-title { font-size: 1.8rem; }
+            .team-score { font-size: 1.4rem; padding: 5px 15px; }
+            .card { font-size: 1.1rem; padding: 5px; }
+            .photo-display { width: 100px; height: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm-player" loop preload="auto">
+        <source src="https://ia800405.us.archive.org/32/items/MonkeysSpinningMonkeys/Monkeys%20Spinning%20Monkeys.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="status-message" class="status-message"></div>
+    
+    <div id="volume-control">
+        🔊 <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.3" oninput="updateVolume(this.value)">
+    </div>
+
+    <div id="in-game-controls">
+        <button class="control-btn" onclick="showStartScreen()">🏠 Menu</button>
+        <button class="control-btn" style="background-color: #E63946;" onclick="restartMatch()">🔄 Restart</button>
+    </div>
+
+    <h1>Post Office TAG-OF-WAR</h1>
+    
+    <div id="start-screen">
+        <h2>Are you ready?</h2>
+        <button class="action-btn" onclick="startGame()">START GAME</button>
+        <button class="action-btn settings-btn" onclick="openSettings()">⚙️ Teacher Settings</button>
+    </div>
+
+    <div id="settings-screen">
+        <h2 style="margin-top: 50px;">⚙️ Teacher Dashboard</h2>
+        
+        <div class="settings-panel">
+            <h3 style="margin-top:0; color: var(--text-dark); text-align:center;">Data Management</h3>
+            <div class="io-buttons">
+                <button class="io-btn" onclick="exportDataToJSON()">💾 Export to JSON</button>
+                <label class="io-btn" style="cursor: pointer;">
+                    📂 Import JSON
+                    <input type="file" accept=".json" style="display:none;" onchange="importDataFromJSON(event)">
+                </label>
+            </div>
+            <p style="font-size:0.9rem; text-align:center; margin:0;">Save your settings to your computer, or load an existing one!</p>
+        </div>
+        
+        <div class="settings-panel">
+            <h3 style="margin-top:0; color: var(--text-dark);">1. Visual Settings</h3>
+            <div class="settings-row">
+                <label style="font-size: 1.2rem;">Font Style:</label>
+                <select id="font-family-select" style="width: 60%;" onchange="livePreviewFonts()">
+                    <option value="'Century Gothic', sans-serif">Century Gothic</option>
+                    <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+            </div>
+            <div class="settings-row">
+                <label style="font-size: 1.2rem;">Font Weight:</label>
+                <select id="font-weight-select" style="width: 60%;" onchange="livePreviewFonts()">
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold</option>
+                    <option value="900">Bolder (900)</option>
+                </select>
+            </div>
+            <hr style="margin: 20px 0; border: 1px solid #ccc;">
+            <div class="settings-row" style="justify-content: flex-start;">
+                <label style="font-size: 1.2rem; margin-right:10px;">Center Arena Image:</label>
+                <div class="img-preview-box" style="width: auto;">
+                    <img id="arena-preview" src="" alt="Arena">
+                    <input type="file" accept="image/png, image/jpeg" onchange="handleArenaImageUpload(event)">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <h3 style="margin-top:0; color: var(--text-dark);">2. Game Settings & Vocabulary</h3>
+            <div class="score-input-container">
+                Target Points to Win: <input type="number" id="win-score-input" value="16" min="1" max="100">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.2rem; border-bottom:3px solid #ccc; padding-bottom:5px;">
+                <span style="width:35%">Word</span>
+                <span style="width:45%">Upload Photo</span>
+                <span style="width:15%">Action</span>
+            </div>
+            <div id="settings-vocab-list"></div>
+            
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 15px;">
+                <button class="add-btn" style="margin-top: 0; flex: 1;" onclick="addNewVocabRow()">➕ Add Blank Question</button>
+                <button class="add-btn" style="margin-top: 0; flex: 1; background: #E63946; border-color: #9b222a;" onclick="clearAllVocab()">🗑️ Clear All Questions</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 50px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="action-btn" style="background:#2A9D8F; font-size: 1.5rem;" onclick="justSaveSettings()">💾 Save Settings</button>
+            <button class="action-btn" style="font-size: 1.5rem;" onclick="saveSettingsAndPlay()">▶ Save & Play</button>
+            <button class="action-btn" style="background:#E63946; font-size: 1.5rem;" onclick="resetToDefaults()">🔄 Restore Theme</button>
+        </div>
+    </div>
+
+    <div id="main-layout">
+        <div id="team1" class="team-column">
+            <h2 class="team-title" style="color: var(--team1-color)">Team 1</h2>
+            <div class="team-score" id="t1-score-display">0 / 16</div>
+            <div class="question">What is this?</div>
+            <div class="photo-display" id="t1-photo"></div>
+            <div class="cards" id="t1-cards"></div>
+        </div>
+
+        <div id="arena-container">
+            <div id="win-line-left" class="vertical-line"></div>
+            <div id="center-line" class="vertical-line"></div>
+            <div id="win-line-right" class="vertical-line"></div>
+            
+            <div id="tug-group">
+                <img id="arena-main-img" src="" alt="Tag of War Arena">
+            </div>
+            
+            <div id="burst-left" style="left: 30%; display:none;" class="burst"></div>
+            <div id="burst-right" style="left: 70%; display:none;" class="burst"></div>
+        </div>
+
+        <div id="team2" class="team-column">
+            <h2 class="team-title" style="color: var(--team2-color)">Team 2</h2>
+            <div class="team-score" id="t2-score-display">0 / 16</div>
+            <div class="question">What is this?</div>
+            <div class="photo-display" id="t2-photo"></div>
+            <div class="cards" id="t2-cards"></div>
+        </div>
+    </div>
+
+    <div id="win-overlay">
+        <div id="win-text">Team Wins!</div>
+        <button class="action-btn" onclick="showStartScreen()">Back to Menu</button>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION & STATE
+        // ============================================
+        const CONFIG = {
+            DEFAULT_WIN_SCORE: 16,
+            MAX_VOCAB_SIZE: 4,
+            MAX_CARD_WIDTH: 300,
+            MAX_ARENA_WIDTH: 800,
+            MAX_FILE_SIZE_MB: 2,
+            IMAGE_QUALITY_VOCAB: 0.6,
+            IMAGE_QUALITY_ARENA: 0.8,
+            ROPE_OFFSET: 20
+        };
+
+        function getSVGPlaceholder(text, color) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="${color}"/><text x="200" y="200" font-family="Arial" font-weight="bold" font-size="50" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${text}</text></svg>`;
+            return `data:image/svg+xml;base64,${btoa(svg)}`;
+        }
+        function getSVGRopePlaceholder() {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="100"><rect x="0" y="40" width="600" height="20" fill="#8B4513" rx="10"/><circle cx="300" cy="50" r="25" fill="#E63946" stroke="#ffffff" stroke-width="5"/></svg>`;
+            return `data:image/svg+xml;base64,${btoa(svg)}`;
+        }
+
+        const DEFAULT_VOCAB = [
+            { word: "postcard", photo: getSVGPlaceholder("Postcard", "#E63946") },
+            { word: "stamp", photo: getSVGPlaceholder("Stamp", "#2A9D8F") },
+            { word: "letter", photo: getSVGPlaceholder("Letter", "#F4A261") },
+            { word: "package", photo: getSVGPlaceholder("Package", "#264653") },
+            { word: "mail carrier", photo: getSVGPlaceholder("Carrier", "#E76F51") },
+            { word: "mailbox", photo: getSVGPlaceholder("Mailbox", "#457B9D") }
+        ];
+
+        let vocabList = [...DEFAULT_VOCAB];
+        let winScore = CONFIG.DEFAULT_WIN_SCORE;
+        let arenaImgData = getSVGRopePlaceholder();
+        let currentFontFamily = "'Century Gothic', sans-serif";
+        let currentFontWeight = "bold";
+
+        let audioCtx = null;
+        let masterVolume = 0.3;
+        
+        // ============================================
+        // AUDIO & SOUND EFFECTS
+        // ============================================
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function updateVolume(val) {
+            masterVolume = parseFloat(val);
+            const bgm = document.getElementById('bgm-player');
+            if (bgm) bgm.volume = masterVolume;
+        }
+
+        function startBackgroundMusic() {
+            const bgm = document.getElementById('bgm-player');
+            if (bgm) {
+                bgm.volume = masterVolume;
+                bgm.play().catch(e => console.log("Audio autoplay was blocked by the browser."));
+            }
+        }
+
+        function stopBackgroundMusic() {
+            const bgm = document.getElementById('bgm-player');
+            if (bgm) {
+                bgm.pause();
+                bgm.currentTime = 0;
+            }
+        }
+
+        function playSound(type) {
+            try {
+                if (masterVolume <= 0) return;
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); 
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                    gain.gain.setValueAtTime(0.3 * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                    gain.gain.setValueAtTime(0.3 * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                } else if (type === 'pull') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(80, now);
+                    osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                    gain.gain.setValueAtTime(0.2 * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'win') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        o.type = 'sine'; o.frequency.value = f;
+                        const g = audioCtx.createGain();
+                        o.connect(g); g.connect(audioCtx.destination);
+                        g.gain.setValueAtTime(0, now + i*0.1);
+                        g.gain.linearRampToValueAtTime(0.4 * masterVolume, now + i*0.1 + 0.05);
+                        g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
+                        o.start(now + i*0.1); o.stop(now + i*0.1 + 0.5);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // ============================================
+        // FONTS & DATA MANAGEMENT
+        // ============================================
+        
+        function livePreviewFonts() {
+            const family = document.getElementById('font-family-select').value;
+            const weight = document.getElementById('font-weight-select').value;
+            applyFonts(family, weight);
+        }
+
+        function applyFonts(family, weight) {
+            currentFontFamily = family;
+            currentFontWeight = weight;
+            document.documentElement.style.setProperty('--primary-font', currentFontFamily);
+            document.documentElement.style.setProperty('--font-weight', currentFontWeight);
+            
+            const familySelect = document.getElementById('font-family-select');
+            const weightSelect = document.getElementById('font-weight-select');
+            if(familySelect) familySelect.value = currentFontFamily;
+            if(weightSelect) weightSelect.value = currentFontWeight;
+        }
+
+        function exportDataToJSON() {
+            syncDOMToData(); 
+            const dataToSave = {
+                vocab: vocabList,
+                score: winScore,
+                arena: arenaImgData,
+                fontFamily: currentFontFamily,
+                fontWeight: currentFontWeight
+            };
+            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "TugOfWar_GameData.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showStatus("JSON Downloaded! Check your downloads folder.", "success");
+        }
+
+        function importDataFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.vocab && Array.isArray(importedData.vocab)) {
+                        vocabList = importedData.vocab;
+                        winScore = importedData.score || CONFIG.DEFAULT_WIN_SCORE;
+                        document.getElementById('win-score-input').value = winScore;
+                        
+                        if (importedData.arena) {
+                            arenaImgData = importedData.arena;
+                            document.getElementById('arena-preview').src = arenaImgData;
+                        }
+
+                        if (importedData.fontFamily) {
+                            applyFonts(importedData.fontFamily, importedData.fontWeight || 'bold');
+                        }
+                        
+                        renderSettingsList();
+                        showStatus("JSON Data loaded successfully!", "success");
+                    } else {
+                        showStatus("Invalid JSON file format.", "error");
+                    }
+                } catch(err) {
+                    showStatus("Error parsing JSON file.", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        // ============================================
+        // UTILS
+        // ============================================
+        function sanitizeText(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+        
+        function showStatus(message, type = 'info', duration = 3000) {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
+            if (duration > 0) setTimeout(() => statusEl.style.display = 'none', duration);
+        }
+        
+        function shuffle(arr) {
+            let shuffled = [...arr];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // --- IMAGE UPLOAD LOGIC ---
+        function handleImageUpload(event, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024) return showStatus(`File too large! Max: ${CONFIG.MAX_FILE_SIZE_MB}MB`, 'error');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width, height = img.height;
+                    if (width > height && width > CONFIG.MAX_CARD_WIDTH) { height *= CONFIG.MAX_CARD_WIDTH / width; width = CONFIG.MAX_CARD_WIDTH; } 
+                    else if (height > CONFIG.MAX_CARD_WIDTH) { width *= CONFIG.MAX_CARD_WIDTH / height; height = CONFIG.MAX_CARD_WIDTH; }
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY_VOCAB);
+                    vocabList[index].photo = dataUrl;
+                    document.getElementById(`preview-${index}`).src = dataUrl;
+                    showStatus('Image uploaded!', 'success', 2000);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleArenaImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024) return showStatus(`File too large! Max: ${CONFIG.MAX_FILE_SIZE_MB}MB`, 'error');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width, height = img.height;
+                    if (width > height && width > CONFIG.MAX_ARENA_WIDTH) { height *= CONFIG.MAX_ARENA_WIDTH / width; width = CONFIG.MAX_ARENA_WIDTH; } 
+                    else if (height > CONFIG.MAX_ARENA_WIDTH) { width *= CONFIG.MAX_ARENA_WIDTH / height; height = CONFIG.MAX_ARENA_WIDTH; }
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    arenaImgData = canvas.toDataURL('image/png', CONFIG.IMAGE_QUALITY_ARENA);
+                    document.getElementById('arena-preview').src = arenaImgData;
+                    const mainImg = document.getElementById('arena-main-img');
+                    if (mainImg) mainImg.src = arenaImgData;
+                    
+                    showStatus('Arena image uploaded!', 'success', 2000);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- SETTINGS UI FUNCTIONS ---
+        function openSettings() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'flex';
+            document.getElementById('win-score-input').value = winScore;
+            document.getElementById('arena-preview').src = arenaImgData;
+            
+            document.getElementById('font-family-select').value = currentFontFamily;
+            document.getElementById('font-weight-select').value = currentFontWeight;
+            
+            renderSettingsList();
+        }
+
+        function syncDOMToData() {
+            for (let i = 0; i < vocabList.length; i++) {
+                const wordEl = document.getElementById(`word-${i}`);
+                if (wordEl) {
+                    vocabList[i].word = sanitizeText(wordEl.value.trim());
+                }
+            }
+            winScore = parseInt(document.getElementById('win-score-input').value) || CONFIG.DEFAULT_WIN_SCORE;
+        }
+
+        function renderSettingsList() {
+            const container = document.getElementById('settings-vocab-list');
+            container.innerHTML = '';
+            vocabList.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'settings-row';
+                row.innerHTML = `
+                    <input type="text" id="word-${index}" value="${sanitizeText(item.word)}" placeholder="Word" maxlength="50">
+                    <div class="img-preview-box">
+                        <img id="preview-${index}" src="${item.photo}" alt="Preview">
+                        <input type="file" id="file-${index}" accept="image/*" onchange="handleImageUpload(event, ${index})">
+                    </div>
+                    <button class="delete-btn" onclick="deleteVocab(${index})">🗑️</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addNewVocabRow() {
+            syncDOMToData(); 
+            vocabList.push({ word: "New Word", photo: getSVGPlaceholder("New", "#999") });
+            renderSettingsList();
+            const screen = document.getElementById('settings-screen');
+            screen.scrollTop = screen.scrollHeight;
+        }
+
+        function clearAllVocab() {
+            if (confirm("Are you sure you want to delete all current questions? This will give you a blank slate.")) {
+                // The game needs a minimum of 4 questions, so we generate 4 blank rows automatically
+                vocabList = Array(CONFIG.MAX_VOCAB_SIZE).fill(null).map(() => ({ 
+                    word: "", 
+                    photo: getSVGPlaceholder("Empty", "#ccc") 
+                }));
+                renderSettingsList();
+                showStatus("All questions cleared! Fill in the blanks to play.", 'info', 4000);
+                
+                // Scroll back to the top of the vocabulary list so the user can start typing
+                const screen = document.getElementById('settings-screen');
+                screen.scrollTop = document.querySelector('.score-input-container').offsetTop - 20;
+            }
+        }
+
+        function deleteVocab(index) {
+            if(vocabList.length <= CONFIG.MAX_VOCAB_SIZE) return showStatus(`You must have at least ${CONFIG.MAX_VOCAB_SIZE} words!`, 'error');
+            syncDOMToData(); 
+            vocabList.splice(index, 1);
+            renderSettingsList();
+        }
+
+        function justSaveSettings() {
+            syncDOMToData();
+            
+            for (let i = 0; i < vocabList.length; i++) {
+                if (!vocabList[i].word) return showStatus(`Word ${i + 1} cannot be empty`, 'error');
+            }
+            
+            applyFonts(document.getElementById('font-family-select').value, document.getElementById('font-weight-select').value);
+            showStatus("✅ Settings Saved Successfully!", 'success');
+        }
+
+        function saveSettingsAndPlay() {
+            justSaveSettings();
+            
+            let isValid = true;
+            for (let i = 0; i < vocabList.length; i++) {
+                if (!vocabList[i].word) isValid = false;
+            }
+            if (isValid) startGame();
+        }
+
+        function resetToDefaults() {
+            if(confirm("Are you sure? This will delete all custom images and restore the default postal theme.")) {
+                vocabList = [...DEFAULT_VOCAB];
+                winScore = CONFIG.DEFAULT_WIN_SCORE;
+                arenaImgData = getSVGRopePlaceholder();
+                applyFonts("'Century Gothic', sans-serif", "bold");
+                
+                document.getElementById('win-score-input').value = winScore;
+                document.getElementById('arena-preview').src = arenaImgData;
+                
+                renderSettingsList();
+                showStatus("Default theme restored.", 'success', 2000);
+            }
+        }
+
+        function showStartScreen() {
+            document.getElementById('settings-screen').style.display = 'none';
+            document.getElementById('win-overlay').style.display = 'none';
+            document.getElementById('main-layout').style.display = 'none'; 
+            document.getElementById('in-game-controls').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            stopBackgroundMusic();
+        }
+
+
+        // --- GAMEPLAY LOGIC ---
+        let gameOver = false;
+        let ropePos = 50; 
+        
+        let sharedQuestionStack = [];
+        let t1Index = 0, t2Index = 0;
+
+        // Updates the running score UI for both teams
+        function updateScoreDisplay(teamNum = null) {
+            document.getElementById('t1-score-display').innerText = `${t1Index} / ${winScore}`;
+            document.getElementById('t2-score-display').innerText = `${t2Index} / ${winScore}`;
+            
+            // Add a fun little pop animation to the score that just changed
+            if (teamNum !== null) {
+                const el = document.getElementById(`t${teamNum}-score-display`);
+                el.style.transform = 'scale(1.15)';
+                setTimeout(() => el.style.transform = 'scale(1)', 150);
+            }
+        }
+
+        function resetFeedback(teamNum) {
+            const teamContainer = document.getElementById(`team${teamNum}`);
+            const allCards = teamContainer.querySelectorAll('.card');
+            allCards.forEach(c => c.classList.remove('pressed', 'correct', 'wrong', 'disabled'));
+            teamContainer.classList.remove('shake');
+        }
+
+        function triggerBurst(teamNum) {
+            const burst = document.getElementById(teamNum === 1 ? 'burst-left' : 'burst-right');
+            burst.style.background = `radial-gradient(circle, var(--team${teamNum}-color) 0%, transparent 70%)`;
+            burst.style.display = 'block';
+            burst.style.animation = 'none';
+            setTimeout(() => burst.style.animation = 'pop 0.4s ease-out forwards', 10);
+        }
+
+        function loadQuestion(teamNum) {
+            let index = teamNum === 1 ? t1Index : t2Index;
+            const photoEl = document.getElementById(`t${teamNum}-photo`);
+            const container = document.getElementById(`t${teamNum}-cards`);
+
+            resetFeedback(teamNum);
+            
+            const target = vocabList[sharedQuestionStack[index % sharedQuestionStack.length]];
+            
+            let choices = [target.word];
+            let attempts = 0;
+            while(choices.length < 4 && attempts < 100) {
+                const randWord = vocabList[Math.floor(Math.random() * vocabList.length)].word;
+                if (!choices.includes(randWord)) choices.push(randWord);
+                attempts++;
+            }
+            choices = shuffle(choices);
+
+            photoEl.innerHTML = `<img src="${target.photo}" onerror="this.src=''" alt="Question Image">`;
+            container.innerHTML = ''; 
+
+            choices.forEach(choice => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.textContent = sanitizeText(choice);
+                const handleInput = (e) => {
+                    e.preventDefault(); 
+                    handleGuess(teamNum, choice, target.word, card);
+                };
+                card.addEventListener('touchstart', handleInput, {passive: false});
+                card.addEventListener('mousedown', handleInput);
+                container.appendChild(card);
+            });
+        }
+
+        function handleGuess(teamNum, guess, correctWord, clickedCard) {
+            if (gameOver) return; // INSTANT LOCK: Prevents the race condition completely
+
+            const teamContainer = document.getElementById(`team${teamNum}`);
+            const allCards = teamContainer.querySelectorAll('.card');
+
+            if (Array.from(allCards).some(c => c.classList.contains('disabled'))) return;
+
+            resetFeedback(teamNum);
+            clickedCard.classList.add('pressed');
+
+            if (guess === correctWord) {
+                playSound('correct');
+                clickedCard.classList.add('correct');
+                triggerBurst(teamNum);
+                
+                if (teamNum === 1) {
+                    t1Index++;
+                    updateScoreDisplay(1);
+                } else {
+                    t2Index++;
+                    updateScoreDisplay(2);
+                }
+                
+                ropePos = 50 + (t2Index - t1Index) * (CONFIG.ROPE_OFFSET / winScore);
+                if (ropePos <= 30) ropePos = 30; 
+                else if (ropePos >= 70) ropePos = 70;
+
+                document.getElementById('tug-group').style.left = ropePos + "%";
+                playSound('pull');
+
+                allCards.forEach(c => c.classList.add('disabled'));
+
+                // Evaluate win instantly to prevent the other team from sneaking a point in during the delay
+                if (t1Index >= winScore || t2Index >= winScore) {
+                    gameOver = true; 
+                    setTimeout(() => {
+                        // Check exact standings in case it was somehow a perfectly timed true tie
+                        if (t1Index >= winScore && t2Index >= winScore) endGame("It's a TIE! 🤝");
+                        else if (t1Index >= winScore) endGame("Team 1 Wins! 🎉");
+                        else endGame("Team 2 Wins! 🎉");
+                    }, 600); 
+                } else {
+                    setTimeout(() => loadQuestion(teamNum), 600);
+                }
+            } else {
+                playSound('wrong');
+                clickedCard.classList.add('wrong');
+                teamContainer.classList.add('shake');
+            }
+        }
+
+        function endGame(message) {
+            gameOver = true;
+            playSound('win');
+            stopBackgroundMusic();
+            document.getElementById('win-text').innerText = message;
+            document.getElementById('in-game-controls').style.display = 'none';
+            document.getElementById('win-overlay').style.display = 'flex';
+        }
+
+        function restartMatch() {
+            if(confirm("Are you sure you want to restart the current game?")) startGame();
+        }
+
+        function startGame() {
+            if (vocabList.length < CONFIG.MAX_VOCAB_SIZE) return showStatus(`Please add at least ${CONFIG.MAX_VOCAB_SIZE} words!`, 'error');
+
+            startBackgroundMusic();
+            document.getElementById('arena-main-img').src = arenaImgData; 
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'none';
+            document.getElementById('win-overlay').style.display = 'none';
+            document.getElementById('main-layout').style.display = 'flex'; 
+            document.getElementById('in-game-controls').style.display = 'block';
+            
+            gameOver = false; ropePos = 50; t1Index = 0; t2Index = 0;
+            document.getElementById('tug-group').style.left = "50%";
+            updateScoreDisplay(); // Initialize running scores to 0
+
+            sharedQuestionStack = [];
+            while(sharedQuestionStack.length < winScore + 5) {
+                const indices = Array.from({length: vocabList.length}, (_, i) => i);
+                sharedQuestionStack = sharedQuestionStack.concat(shuffle([...indices]));
+            }
+
+            loadQuestion(1); loadQuestion(2);
+        }
+
+        // --- NEW: AUTO-LOAD JSON DATA ON PAGE LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('./tugofwar.json')
+                .then(response => {
+                    if (!response.ok) throw new Error("tugofwar.json not found");
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.vocab && Array.isArray(data.vocab)) {
+                        vocabList = data.vocab;
+                        if (data.score) {
+                            winScore = data.score;
+                            document.getElementById('win-score-input').value = winScore;
+                        }
+                        if (data.arena) {
+                            arenaImgData = data.arena;
+                            document.getElementById('arena-preview').src = arenaImgData;
+                        }
+                        if (data.fontFamily && data.fontWeight) {
+                            applyFonts(data.fontFamily, data.fontWeight);
+                        }
+                        console.log("✅ Successfully loaded tugofwar.json automatically!");
+                    }
+                })
+                .catch(err => {
+                    console.log("ℹ️ Could not load tugofwar.json automatically. Using default built-in data.", err);
+                });
+        });
+    </script>
+</body>
+</html>
