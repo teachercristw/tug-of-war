@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>Teacher Edition: TAG-OF-WAR Game</title>
+    <title>Teacher Edition: TUG-OF-WAR Game</title>
     <style>
         :root {
             --primary-font: 'Century Gothic', sans-serif;
@@ -308,7 +308,7 @@
         <button class="control-btn" style="background-color: #E63946;" onclick="restartMatch()">🔄 Restart</button>
     </div>
 
-    <h1>Post Office TAG-OF-WAR</h1>
+    <h1>Post Office TUG-OF-WAR</h1>
     
     <div id="start-screen">
         <h2>Are you ready?</h2>
@@ -324,7 +324,7 @@
         </div>
 
         <div class="settings-panel">
-            <h3 style="margin-top:0; color: var(--text-dark);">1. Center Arena Image (Tag-of-War Kids)</h3>
+            <h3 style="margin-top:0; color: var(--text-dark);">1. Center Arena Image (Tug-of-War Kids)</h3>
             <div class="settings-row" style="justify-content: flex-start;">
                 <div class="img-preview-box" style="width: 100%;">
                     <img id="arena-preview" src="" alt="Image Error">
@@ -396,25 +396,14 @@
     <script>
         // --- TEACHER EDITABLE DATA & LOCAL STORAGE LOGIC ---
         const DEFAULT_WIN_SCORE = 16;
-        const DEFAULT_ARENA_IMG = "Untitled design (1).png"; 
+        const DEFAULT_ARENA_IMG = "tug.png"; 
         
         const DEFAULT_VOCAB = [
-            { word: "postcard", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Postcard_from_Sweden.jpg/400px-Postcard_from_Sweden.jpg" },
-            { word: "stamp", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Penny_black.jpg/400px-Penny_black.jpg" },
-            { word: "hot", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Campfire_at_night.jpg/400px-Campfire_at_night.jpg" },
-            { word: "cold", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Ice_cubes.jpg/400px-Ice_cubes.jpg" },
-            { word: "good", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Thumbs_up_icon.png/400px-Thumbs_up_icon.png" },
-            { word: "bad", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Thumbs_down_icon.png/400px-Thumbs_down_icon.png" },
-            { word: "hamburger", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Hamburger_%28black_bg%29.jpg/400px-Hamburger_%28black_bg%29.jpg" },
-            { word: "hotdog", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Hot_dog_with_mustard.png/400px-Hot_dog_with_mustard.png" },
-            { word: "sandwich", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/BLT_sandwich_on_toast.jpg/400px-BLT_sandwich_on_toast.jpg" },
-            { word: "French fries", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/French_Fries.jpg/400px-French_Fries.jpg" },
-            { word: "coke", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/15-09-26-RalfR-WLC-0098.jpg/400px-15-09-26-RalfR-WLC-0098.jpg" },
-            { word: "tea", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Black_tea_in_a_glass_cup.jpg/400px-Black_tea_in_a_glass_cup.jpg" },
-            { word: "milk", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Oat_milk_glass_and_pitcher.jpg/400px-Oat_milk_glass_and_pitcher.jpg" },
-            { word: "water", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Glass_of_water.jpg/400px-Glass_of_water.jpg" },
-            { word: "city", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/New_York_City_Skyline.jpg/400px-New_York_City_Skyline.jpg" },
-            { word: "country", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Moravian_Tuscany.jpg/400px-Moravian_Tuscany.jpg" }
+            { word: "Stamp", photo: "stamp.png" },
+            { word: "Mailbox", photo: "mailbox.png" },
+            { word: "Letter", photo: "letter.png" },
+            { word: "Postman", photo: "postman.png" }
+            
         ];
 
         let vocabList = [];
