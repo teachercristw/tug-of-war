@@ -2,76 +2,110 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>Teacher Edition: TUG-OF-WAR Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teacher Cris's Tug-of-War</title>
     <style>
         :root {
-            --primary-font: 'Century Gothic', sans-serif;
-            --team1-color: #E63946;
-            --team1-bg: #FFEAEA;
-            --team2-color: #2A9D8F;
-            --team2-bg: #E8F8F5;
-            --accent-color: #F4A261;
-            --text-dark: #264653;
-            --settings-bg: #F8F9FA;
+            --primary-font: 'Century Gothic', 'AppleGothic', system-ui, sans-serif;
+            --base-font-size: 16px;
+            --font-weight: bold;
+            --text-dark: #2C3E50; 
+
+            --team1-color: #FF5E7E;
+            --team1-shadow: #C93E5C;
+            --team1-bg: rgba(255, 234, 234, 0.85);
+            --team2-color: #00D2FF;
+            --team2-shadow: #0099CC;
+            --team2-bg: rgba(232, 248, 245, 0.85);
+            --accent-color: #FFD700;
+            --settings-bg: rgba(240, 243, 244, 0.95);
         }
 
-        body {
+        html { font-size: var(--base-font-size); }
+
+        body { 
+            user-select: none; 
+            -webkit-user-select: none; 
+            touch-action: none; 
+            margin: 0; 
+            overflow: hidden; 
             font-family: var(--primary-font);
-            font-weight: bold;
-            margin: 0;
-            padding: 0;
-            background-color: #F1F2F6;
+            font-weight: var(--font-weight);
+            color: var(--text-dark);
             text-align: center;
-            overflow: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            touch-action: none; 
+            background-color: #000; /* Fallback */
+        }
+
+        /* --- Dynamic Background Layers --- */
+        .bg-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; /* Keep it behind everything */
+            display: none; /* Toggled via JS */
+        }
+        .bg-layer video, .bg-layer img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        /* Animated CSS Fallback */
+        .css-bg {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        button, input, select {
+            font-family: var(--primary-font);
+            font-weight: var(--font-weight);
         }
         
-        h1 {
-            color: var(--text-dark);
-            margin: 10px 0;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 0 #fff;
+        #main-title-display {
+            color: #ffffff;
+            margin: 15px 0;
+            font-size: 3em;
+            text-shadow: 4px 4px 0 var(--text-dark), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark);
             z-index: 10;
+            letter-spacing: 2px;
         }
 
         /* --- In-Game Controls --- */
         #in-game-controls {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 20px;
+            left: 20px;
             display: none;
             z-index: 100;
+            gap: 15px;
         }
 
         .control-btn {
-            background-color: #457B9D;
+            background-color: #9B59B6;
             color: white;
-            border: 3px solid var(--text-dark);
-            padding: 10px 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 15px;
+            border: 4px solid var(--text-dark);
+            padding: 12px 20px;
+            font-size: 1.2em;
+            border-radius: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 0 var(--text-dark);
-            margin-right: 10px;
-            font-family: var(--primary-font);
-            transition: transform 0.05s, box-shadow 0.05s;
+            box-shadow: 0 6px 0 var(--text-dark);
+            transition: transform 0.1s, box-shadow 0.1s;
+            min-height: 50px; min-width: 50px;
         }
-
         .control-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 var(--text-dark);
+            transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark);
         }
 
         /* --- Screens --- */
         #start-screen, #settings-screen, #win-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -79,290 +113,371 @@
             z-index: 200;
         }
 
-        #settings-screen {
-            background: var(--settings-bg);
-            justify-content: flex-start;
-            overflow-y: auto;
-            display: none;
-            padding: 20px;
-            box-sizing: border-box;
-            touch-action: auto; 
+        #start-screen {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
 
-        h2 { font-size: 3rem; color: var(--text-dark); margin-bottom: 20px; }
+        #subtitle-display {
+            font-size: 5em;
+            margin-bottom: 40px;
+            color: #fff;
+            text-shadow: 4px 4px 0 var(--text-dark);
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
 
         button.action-btn {
             background-color: var(--accent-color);
-            color: #fff;
-            border: 4px solid var(--text-dark);
-            padding: 15px 40px;
-            font-size: 2rem;
-            font-weight: bold;
+            color: var(--text-dark);
+            border: 6px solid var(--text-dark);
+            padding: 20px 50px;
+            font-size: 2.5em;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 6px 0 var(--text-dark);
+            box-shadow: 0 10px 0 var(--text-dark);
             transition: all 0.1s;
-            font-family: var(--primary-font);
-            margin: 10px;
+            margin: 15px;
+            min-height: 80px; 
+            text-transform: uppercase;
         }
-        button.action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--text-dark); }
+        button.action-btn:active { transform: translateY(10px); box-shadow: 0 0 0 var(--text-dark); }
 
         button.settings-btn {
             background-color: #A8DADC;
-            color: var(--text-dark);
-            font-size: 1.2rem;
-            padding: 10px 20px;
-        }
-
-        /* --- Teacher Settings UI --- */
-        .settings-panel {
-            background: white;
+            font-size: 1.5em;
+            padding: 15px 30px;
             border: 4px solid var(--text-dark);
-            border-radius: 15px;
-            padding: 20px;
-            width: 90%;
-            max-width: 950px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 0 var(--text-dark);
+        }
+        button.settings-btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark); }
+
+        /* --- Tabbed Dashboard UI --- */
+        #settings-screen {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
         }
 
+        .dashboard-container {
+            background: var(--settings-bg);
+            width: 95%; max-width: 1000px; height: 90vh;
+            border-radius: 30px; border: 6px solid var(--text-dark);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .dashboard-header {
+            background: #fff; padding: 20px 20px 0 20px;
+            border-bottom: 4px solid var(--text-dark);
+        }
+        .dashboard-header h2 { margin: 0 0 15px 0; font-size: 2.5em; }
+
+        .tabs { display: flex; gap: 10px; overflow-x: auto; }
+        .tab-btn {
+            flex: 1; padding: 15px 20px; font-size: 1.2em; background: #e9ecef;
+            border: 3px solid var(--text-dark); border-bottom: none;
+            border-radius: 15px 15px 0 0; cursor: pointer;
+            color: var(--text-dark); transition: background 0.2s; white-space: nowrap;
+        }
+        .tab-btn.active { background: var(--accent-color); font-size: 1.3em; }
+
+        .tab-content-area {
+            flex: 1; overflow-y: auto; padding: 25px;
+            background: transparent; touch-action: auto; user-select: auto; -webkit-user-select: auto;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dashboard-footer {
+            background: #fff; padding: 15px; border-top: 4px solid var(--text-dark);
+            display: flex; justify-content: center; gap: 20px;
+        }
+
+        /* Settings Inputs */
         .settings-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            background: #f1f2f6;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: left;
-            gap: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; background: #fff; padding: 15px;
+            border-radius: 15px; border: 3px solid #dee2e6; text-align: left; gap: 15px;
+        }
+        .settings-row label { font-size: 1.2em; color: var(--text-dark); flex-shrink: 0; width: 35%; }
+        .settings-row input[type="text"], .settings-row input[type="number"], .settings-row select {
+            padding: 12px; border: 3px solid #ccc; border-radius: 10px;
+            font-size: 1.2em; min-height: 50px; box-sizing: border-box; color: var(--text-dark); flex-grow: 1; width: 100%;
+        }
+        .settings-row input[type="color"] { height: 50px; width: 100px; cursor: pointer; border: 3px solid #ccc; border-radius: 10px; }
+
+        .question-edit-card {
+            background: #fff; padding: 15px; border-radius: 15px;
+            border: 3px solid #dee2e6; margin-bottom: 15px; text-align: left;
+        }
+        .img-preview-box img, .img-preview-box video {
+            width: 80px; height: 80px; object-fit: cover; 
+            border-radius: 12px; border: 3px solid var(--text-dark);
+            background: #fff; flex-shrink: 0;
         }
 
-        .settings-row input[type="text"] {
-            font-family: var(--primary-font);
-            font-weight: bold;
-            padding: 10px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            font-size: 1.1rem;
-        }
+        .delete-btn { background: #E63946; color: white; border: 3px solid var(--text-dark); padding: 10px; border-radius: 12px; cursor: pointer; font-size: 1.5em; width: 60px; min-height: 50px; box-shadow: 0 4px 0 var(--text-dark);}
+        .delete-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--text-dark); }
 
-        .word-input { width: 25%; }
-        .url-input { width: 100%; font-size: 0.9rem !important; padding: 6px !important; }
+        .add-btn { background: #2ED573; color: var(--text-dark); border: 4px solid var(--text-dark); padding: 15px 20px; border-radius: 15px; cursor: pointer; font-size: 1.5em; width: 100%; margin-top: 10px; box-shadow: 0 6px 0 var(--text-dark);}
+        .add-btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark); }
 
-        .settings-row input[type="file"] {
-            font-family: var(--primary-font);
-            font-size: 0.9rem;
-            width: 100%;
-            cursor: pointer;
-            background: #e9ecef;
-            padding: 5px;
-            border-radius: 5px;
-            border: 2px dashed #adb5bd;
-        }
-
-        .img-preview-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 60%;
-        }
-
-        .upload-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            width: 100%;
-        }
-
-        .img-preview-box img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain; 
-            border-radius: 8px;
-            border: 2px solid var(--text-dark);
-            background: #ddd;
-            flex-shrink: 0;
-            font-size: 0.6rem;
-            color: #d90429;
-            text-align: center;
-        }
-
-        #arena-preview { width: 120px; height: 60px; object-fit: contain; }
-
-        .delete-btn { background: #E63946; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 10%;}
-        .add-btn { background: #2A9D8F; color: white; border: 2px solid var(--text-dark); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; width: 100%; margin-top: 10px; }
-
-        .score-input-container { margin: 10px 0 20px 0; font-size: 1.5rem; color: var(--text-dark); display: flex; align-items: center; justify-content: center; gap: 15px;}
-        .score-input-container input { font-size: 1.5rem; width: 60px; text-align: center; border: 3px solid var(--text-dark); border-radius: 10px; font-weight: bold; font-family: var(--primary-font);}
-
-        /* --- Main Layout: Center Square Arena --- */
+        /* --- Main Layout & Glassmorphism --- */
         #main-layout {
-            display: none; 
-            width: 100%;
-            flex: 1;
-            justify-content: space-evenly;
-            align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
+            display: none; width: 100%; flex: 1; justify-content: space-evenly;
+            align-items: center; padding: 15px; box-sizing: border-box; gap: 20px;
+            /* Added slight background to ensure visibility if game background is too bright */
+            background: rgba(0,0,0,0.2); 
         }
 
         .team-column {
-            width: 25%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #fff;
-            padding: 20px 10px;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            position: relative;
+            width: 25%; display: flex; flex-direction: column; align-items: center;
+            padding: 25px 15px; border-radius: 30px; border: 6px solid var(--text-dark);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
+        #team1 { background: var(--team1-bg); }
+        #team2 { background: var(--team2-bg); }
 
-        #team1 { border: 5px solid var(--team1-color); background: var(--team1-bg); }
-        #team2 { border: 5px solid var(--team2-color); background: var(--team2-bg); }
+        .team-title { font-size: 3em; margin: 0 0 15px 0; color: #fff; text-transform: uppercase; }
+        #team1 .team-title { text-shadow: 3px 3px 0 var(--team1-shadow), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark), 2px 2px 0 var(--text-dark); }
+        #team2 .team-title { text-shadow: 3px 3px 0 var(--team2-shadow), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark), 2px 2px 0 var(--text-dark); }
 
-        /* --- Center Square Arena --- */
-        #arena-container {
-            width: 40%;
-            max-width: 600px;
-            aspect-ratio: 1 / 1; 
-            position: relative;
-            background: #ffffff;
-            border: 6px solid var(--text-dark);
-            border-radius: 30px;
-            box-shadow: inset 0 0 25px rgba(0,0,0,0.15);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
+        .question {
+            background: var(--text-dark); color: #fff; padding: 8px 20px;
+            border-radius: 20px; font-size: 1.4em; margin-bottom: 15px;
+            border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            text-align: center; width: 80%; min-height: 40px; display: flex;
+            align-items: center; justify-content: center;
         }
-
-        .vertical-line { position: absolute; top: 0; bottom: 0; width: 0; z-index: 3; }
-        #win-line-left { left: 30%; border-left: 6px solid var(--team1-color); transform: translateX(-50%); box-shadow: 0 0 10px var(--team1-color); }
-        #center-line { left: 50%; border-left: 4px dashed rgba(38, 70, 83, 0.5); transform: translateX(-50%); }
-        #win-line-right { left: 70%; border-left: 6px solid var(--team2-color); transform: translateX(-50%); box-shadow: 0 0 10px var(--team2-color); }
-
-        #tug-group {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 2;
-            transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            height: 40%; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 250%; 
-        }
-
-        #tug-group img { height: 100%; width: auto; display: block; pointer-events: none; }
-
-        /* --- Team UI Elements --- */
-        .team-title { font-size: 2.2rem; margin: 0 0 10px 0; color: var(--text-dark); text-shadow: 1px 1px 0 #fff; }
 
         .photo-display {
-            width: 140px; height: 140px; margin: 10px 0 20px 0;
-            background-color: #fff; border: 6px solid #fff; border-bottom-width: 20px; border-radius: 5px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
+            width: 180px; height: 180px; margin: 10px 0 25px 0;
+            background-color: #fff; border: 8px solid var(--text-dark); 
+            border-radius: 25px; box-shadow: 0 10px 0 rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; position: relative; animation: float 4s ease-in-out infinite;
         }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .photo-display img { width: 100%; height: 100%; object-fit: cover; }
 
-        .photo-display img { width: 100%; height: 100%; object-fit: cover; background: #eee; font-size: 0.8rem; color: red;}
-
-        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; }
-
+        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
         .card {
-            background-color: #fff; border: 4px solid var(--text-dark); border-radius: 12px;
-            padding: 10px; font-size: 1.3rem; cursor: pointer; box-shadow: 0 5px 0 var(--text-dark);
-            transition: transform 0.05s, box-shadow 0.05s; display: flex; justify-content: center; align-items: center;
-            height: 40px; user-select: none; -webkit-user-select: none; text-align: center;
+            background-color: #fff; border: 5px solid var(--text-dark); border-radius: 20px;
+            padding: 15px 10px; font-size: 1.5em; cursor: pointer; box-shadow: 0 8px 0 var(--text-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s; 
+            display: flex; justify-content: center; align-items: center;
+            min-height: 60px; user-select: none; -webkit-user-select: none; 
+            text-align: center; color: var(--text-dark);
+        }
+        .card:active, .card.pressed { transform: translateY(8px); box-shadow: 0 0 0 var(--text-dark) !important; }
+        .card.correct { background-color: #2ED573; color: white; border-color: #fff; box-shadow: 0 8px 0 #1E9E53; }
+        .card.correct::after { content: '⭐'; position: absolute; font-size: 2.5em; animation: pop 0.3s ease-out forwards; }
+        .card.wrong { background-color: #FF4757; color: white; border-color: #fff; box-shadow: 0 8px 0 #C93E5C; }
+        .card.wrong::after { content: '✖️'; position: absolute; font-size: 2.5em; animation: pop 0.3s ease-out forwards; }
+        .card.disabled { opacity: 0.6; pointer-events: none; filter: grayscale(50%); }
+
+        /* --- Center Arena --- */
+        #arena-container {
+            width: 42%; max-width: 700px; aspect-ratio: 16 / 10; position: relative;
+            background: #ffffff; /* Clean White */
+            border: 4px solid var(--text-dark); border-radius: 40px;
+            box-shadow: none; /* No shadow */
+            overflow: hidden; display: flex; align-items: center;
         }
 
-        .card:active, .card.pressed { transform: translateY(5px); box-shadow: 0 0 0 var(--text-dark) !important; }
-        .card.correct { background-color: #2ED573; color: white; border-color: #218c4b; }
-        .card.correct::after { content: '✔️'; position: absolute; font-size: 1.5rem; }
-        .card.wrong { background-color: #E63946; color: white; border-color: #9b222a; }
-        .card.wrong::after { content: '❌'; position: absolute; font-size: 1.5rem; }
-        .card.disabled { opacity: 0.7; pointer-events: none; }
+        .vertical-line { position: absolute; top: 0; bottom: 0; width: 0; z-index: 10; pointer-events: none;}
+        #win-line-left { left: 25%; border-left: 4px dashed var(--team1-color); transform: translateX(-50%); opacity: 0.6; }
+        #center-line { left: 50%; border-left: 3px dashed #000000; transform: translateX(-50%); opacity: 0.4; }
+        #win-line-right { left: 75%; border-left: 4px dashed var(--team2-color); transform: translateX(-50%); opacity: 0.6; }
 
-        #win-overlay { display: none; }
-        #win-text { font-size: 5rem; color: var(--text-dark); margin-bottom: 20px; text-shadow: 3px 3px var(--accent-color); }
+        #tug-group {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 5; transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            height: 60%; display: flex; justify-content: center; align-items: center;
+            width: 250%; animation: idleBob 2s ease-in-out infinite;
+        }
+        #tug-group img { height: 100%; width: auto; display: block; pointer-events: none; filter: none; }
 
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        .shake { animation: shake 0.3s ease-in-out; }
+        /* --- Win Screen --- */
+        #win-overlay { display: none; background: rgba(44, 62, 80, 0.9); backdrop-filter: blur(10px); }
+        #win-text-display { font-size: 7em; color: #fff; margin-bottom: 30px; text-shadow: 6px 6px 0 var(--text-dark); animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; text-transform: uppercase; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px) rotate(-2deg); } 75% { transform: translateX(15px) rotate(2deg); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .burst { position: absolute; top: 50%; width: 150px; height: 150px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
+
+        .data-btn {
+            background-color: #3498DB; color: white; border: 4px solid var(--text-dark);
+            padding: 12px 25px; font-size: 1.2em; border-radius: 15px; cursor: pointer;
+            margin: 5px; min-height: 50px; box-shadow: 0 5px 0 var(--text-dark);
+        }
+        .data-btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--text-dark); }
         
-        @keyframes pop { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        .burst { position: absolute; top: 50%; width: 100px; height: 100px; border-radius: 50%; transform: translate(-50%, -50%); animation: pop 0.4s ease-out forwards; pointer-events: none; z-index: 10; }
+        .upload-warning {
+            font-size: 0.9em; color: #E63946; margin: 5px 0 0 0; text-align: left;
+        }
 
     </style>
 </head>
 <body>
 
-    <audio id="bg-music" loop>
-        <source src="https://ia800405.us.archive.org/32/items/MonkeysSpinningMonkeys/Monkeys%20Spinning%20Monkeys.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Dynamic Background Layers -->
+    <div id="home-bg-layer" class="bg-layer css-bg"></div>
+    <div id="game-bg-layer" class="bg-layer css-bg"></div>
 
     <div id="in-game-controls">
         <button class="control-btn" onclick="showStartScreen()">🏠 Menu</button>
         <button class="control-btn" style="background-color: #E63946;" onclick="restartMatch()">🔄 Restart</button>
     </div>
 
-    <h1>Post Office TUG-OF-WAR</h1>
+    <h1 id="main-title-display">Sanxing Elementary Tug-of-War</h1>
     
     <div id="start-screen">
-        <h2>Are you ready?</h2>
-        <button class="action-btn" onclick="startGame()">START GAME</button>
-        <button class="action-btn settings-btn" onclick="openSettings()">⚙️ Teacher Settings</button>
+        <h1 id="subtitle-display">EPIC TUG-OF-WAR</h1>
+        <button class="action-btn" onclick="startGame()">▶️ PLAY NOW</button>
+        <button class="action-btn settings-btn" onclick="openSettings()">⚙️ Dashboard</button>
     </div>
 
     <div id="settings-screen">
-        <h2 style="margin-top: 50px;">⚙️ Teacher Dashboard</h2>
-        
-        <div style="background: #e9ecef; border: 2px dashed #adb5bd; padding: 10px; border-radius: 10px; margin-bottom: 20px; max-width: 800px;">
-            <p style="margin:0; font-size: 1.1rem; color: #d90429;"><b>💡 TIP:</b> Image links from Google Drive or other sites are often blocked by security rules. <b>For the best results, use the "Choose File" button to upload pictures directly from your computer!</b></p>
-        </div>
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <h2>⚙️ Dashboard</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('tab-questions')">❓ Questions</button>
+                    <button class="tab-btn" onclick="switchTab('tab-texts')">✏️ Custom Texts</button>
+                    <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & Backgrounds</button>
+                    <button class="tab-btn" onclick="switchTab('tab-data')">💾 Save / Load</button>
+                </div>
+            </div>
 
-        <div class="settings-panel">
-            <h3 style="margin-top:0; color: var(--text-dark);">1. Center Arena Image (Tug-of-War Kids)</h3>
-            <div class="settings-row" style="justify-content: flex-start;">
-                <div class="img-preview-box" style="width: 100%;">
-                    <img id="arena-preview" src="" alt="Image Error">
-                    <div class="upload-controls">
-                        <input type="text" id="arena-url-input" class="url-input" placeholder="Paste Image Link Here (e.g. https://...)" onchange="updateArenaFromUrl(this.value)">
-                        <span style="font-size: 0.8rem; text-align: center; color: #666; margin: 2px 0;">- OR HIGHLY RECOMMENDED -</span>
-                        <input type="file" accept="image/*" onchange="handleArenaImageUpload(event)">
+            <div class="tab-content-area">
+                <!-- TAB 1: QUESTIONS -->
+                <div id="tab-questions" class="tab-panel active">
+                    <div class="settings-row" style="background: #fff3cd; border-color: #ffc107;">
+                        <label>🎯 Target Points to Win:</label>
+                        <input type="number" id="win-score-input" value="5" min="1" max="100" style="max-width: 150px;">
+                    </div>
+                    <div id="settings-questions-list"></div>
+                    <button class="add-btn" onclick="addNewQuestion()">➕ Add New Question</button>
+                </div>
+
+                <!-- TAB 2: CUSTOM TEXTS -->
+                <div id="tab-texts" class="tab-panel">
+                    <div class="settings-row">
+                        <label>Main Title (Top):</label>
+                        <input type="text" id="text-maintitle" value="Sanxing Elementary Tug-of-War">
+                    </div>
+                    <div class="settings-row">
+                        <label>Start Screen Subtitle:</label>
+                        <input type="text" id="text-subtitle" value="EPIC TUG-OF-WAR">
+                    </div>
+                    <div class="settings-row">
+                        <label>Team 1 Name:</label>
+                        <input type="text" id="text-team1" value="Team 1">
+                    </div>
+                    <div class="settings-row">
+                        <label>Team 2 Name:</label>
+                        <input type="text" id="text-team2" value="Team 2">
+                    </div>
+                </div>
+
+                <!-- TAB 3: STYLE & BACKGROUNDS -->
+                <div id="tab-style" class="tab-panel">
+                    <!-- Typography -->
+                    <h3 style="text-align: left; margin-top: 0;">Typography</h3>
+                    <div class="settings-row">
+                        <label>Font Style (Family):</label>
+                        <select id="typo-family">
+                            <option value="'Century Gothic', 'AppleGothic', system-ui, sans-serif">Century Gothic (Default)</option>
+                            <option value="'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif">Comic Sans / Chalkboard</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+                            <option value="'Courier New', Courier, monospace">Courier New</option>
+                            <option value="Impact, fantasy">Impact</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <label>Base Font Size (px):</label>
+                        <input type="number" id="typo-size" min="12" max="32" value="16">
+                    </div>
+                    <div class="settings-row">
+                        <label>Text & Border Color:</label>
+                        <input type="color" id="typo-color" value="#2C3E50">
+                    </div>
+
+                    <h3 style="text-align: left; margin-top: 30px;">Backgrounds & Arena</h3>
+                    
+                    <!-- Center Arena Image -->
+                    <div class="settings-row">
+                        <label>Center Arena Image:</label>
+                        <div class="img-preview-box" style="display: flex; gap: 15px; align-items: center; width: 100%;">
+                            <img id="arena-preview" src="" alt="Arena" style="width: 120px; height: 80px; object-fit: contain;">
+                            <input type="file" accept="image/*" onchange="handleArenaImageUpload(event)">
+                        </div>
+                    </div>
+
+                    <!-- Homepage Background -->
+                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
+                        <label style="width: 100%; margin-bottom: 5px;">Homepage Background (Image or Video URL):</label>
+                        <div style="display: flex; width: 100%; gap: 15px; align-items: center;">
+                            <div class="img-preview-box" id="home-bg-preview-container" style="width: 80px; height: 80px;"></div>
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                                <input type="text" id="home-bg-url" placeholder="Enter URL (e.g., tug.mp4 or https://...)">
+                                <span style="font-size: 0.9em; color: #666;">* Using a URL is best for videos to avoid memory limits.</span>
+                                <input type="file" accept="image/*,video/*" onchange="handleBackgroundUpload(event, 'home')">
+                                <div class="upload-warning" id="home-bg-warning"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Background -->
+                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
+                        <label style="width: 100%; margin-bottom: 5px;">In-Game Background (Image or Video URL):</label>
+                        <div style="display: flex; width: 100%; gap: 15px; align-items: center;">
+                            <div class="img-preview-box" id="game-bg-preview-container" style="width: 80px; height: 80px;"></div>
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                                <input type="text" id="game-bg-url" placeholder="Leave blank for animated colors, or enter URL">
+                                <span style="font-size: 0.9em; color: #666;">* Leave blank to use default colorful gradient.</span>
+                                <input type="file" accept="image/*,video/*" onchange="handleBackgroundUpload(event, 'game')">
+                                <div class="upload-warning" id="game-bg-warning"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: DATA -->
+                <div id="tab-data" class="tab-panel">
+                    <div class="settings-row" style="flex-direction: column; align-items: center; text-align: center; gap: 20px;">
+                        <h3 style="margin:0; font-size: 1.8em;">💾 Export & Import</h3>
+                        <p style="margin:0; font-size: 1.2em; color: #555;">Save your custom texts, multiple-choice questions, and styles to a file.</p>
+                        <div>
+                            <button class="data-btn" onclick="exportData()">⬇️ Export Current Setup (.json)</button>
+                            <button class="data-btn" onclick="document.getElementById('import-file').click()">⬆️ Import Setup (.json)</button>
+                            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+                        </div>
+                        <hr style="width: 100%; border: 1px solid #ccc; margin: 20px 0;">
+                        <button class="data-btn" style="background:#E63946;" onclick="resetToDefaults()">⚠️ Reset Everything to Defaults</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="settings-panel">
-            <h3 style="margin-top:0; color: var(--text-dark);">2. Game Settings & Vocabulary</h3>
-            <div class="score-input-container">
-                Target Points to Win: <input type="number" id="win-score-input" value="16" min="1" max="100">
+            <div class="dashboard-footer">
+                <button class="action-btn" style="margin:0; padding: 10px 40px; font-size: 1.8em;" onclick="saveSettingsAndClose()">💾 Save & Close</button>
+                <button class="action-btn" style="margin:0; background:#95a5a6; padding: 10px 40px; font-size: 1.8em;" onclick="cancelSettings()">❌ Cancel</button>
             </div>
-
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.2rem; border-bottom:3px solid #ccc; padding-bottom:5px;">
-                <span style="width:25%">Word</span>
-                <span style="width:60%">Link OR Upload File</span>
-                <span style="width:10%">Action</span>
-            </div>
-            <div id="settings-vocab-list"></div>
-            
-            <button class="add-btn" onclick="addNewVocabRow()">➕ Add Blank Question</button>
-        </div>
-
-        <div style="margin-bottom: 50px;">
-            <button class="action-btn" onclick="saveSettingsAndClose()">💾 Save & Close</button>
-            <button class="action-btn" style="background:#E63946;" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
         </div>
     </div>
 
     <div id="main-layout">
         <div id="team1" class="team-column">
-            <h2 class="team-title" style="color: var(--team1-color)">Team 1</h2>
-            <div class="question">What is this?</div>
+            <h2 class="team-title" id="t1-name-display">Team 1</h2>
+            <div class="question" id="t1-question-display">What is this?</div>
             <div class="photo-display" id="t1-photo"></div>
             <div class="cards" id="t1-cards"></div>
         </div>
@@ -373,106 +488,178 @@
             <div id="win-line-right" class="vertical-line"></div>
             
             <div id="tug-group">
-                <img id="arena-main-img" src="" alt="Image Error">
+                <img id="arena-main-img" src="" alt="Pulling...">
             </div>
             
-            <div id="burst-left" style="left: 30%; display:none;" class="burst"></div>
-            <div id="burst-right" style="left: 70%; display:none;" class="burst"></div>
+            <div id="burst-left" style="left: 25%; display:none;" class="burst"></div>
+            <div id="burst-right" style="left: 75%; display:none;" class="burst"></div>
         </div>
 
         <div id="team2" class="team-column">
-            <h2 class="team-title" style="color: var(--team2-color)">Team 2</h2>
-            <div class="question">What is this?</div>
+            <h2 class="team-title" id="t2-name-display">Team 2</h2>
+            <div class="question" id="t2-question-display">What is this?</div>
             <div class="photo-display" id="t2-photo"></div>
             <div class="cards" id="t2-cards"></div>
         </div>
     </div>
 
     <div id="win-overlay">
-        <div id="win-text">Team Wins!</div>
-        <button class="action-btn" onclick="showStartScreen()">Back to Menu</button>
+        <div id="win-text-display">Team Wins!</div>
+        <button class="action-btn" onclick="showStartScreen()">🔙 Back to Menu</button>
     </div>
 
     <script>
-        // --- TEACHER EDITABLE DATA & LOCAL STORAGE LOGIC ---
+        // --- DATA STRUCTURES & DEFAULTS ---
         const DEFAULT_WIN_SCORE = 5;
-        const DEFAULT_ARENA_IMG = "tug.png"; 
+        const DEFAULT_ARENA_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
         
-        const DEFAULT_VOCAB = [
-            { word: "stamp", photo: "https://en.wikipedia.org/wiki/Mint_stamp" },
-            { word: "mailbox", photo: "https://en.wikipedia.org/wiki/Letter_box" },
-            { word: "envelop", photo: "https://simple.wikipedia.org/wiki/Envelope" },
-            { word: "postman", photo: "https://en.wikipedia.org/wiki/Postman_Pat" }
-            
+        const DEFAULT_TYPO = { family: "'Century Gothic', 'AppleGothic', system-ui, sans-serif", size: 16, color: "#2C3E50", weight: "bold" };
+        const DEFAULT_TEXTS = { mainTitle: "Sanxing Elementary Tug-of-War", subtitle: "EPIC TUG-OF-WAR", team1Name: "Team 1", team2Name: "Team 2" };
+
+        const DEFAULT_BGS = {
+            home: { type: "video", url: "tug.mp4" }, // Default from repo
+            game: { type: "css", url: "" }           // Empty string falls back to CSS gradient
+        };
+
+        const DEFAULT_QUESTIONS = [
+            { question: "What animal is this?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg", correct: "Cat", distractors: ["Dog", "Mouse", "Rabbit"] },
+            { question: "Identify this animal:", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Collage_of_Nine_Dogs.jpg/1200px-Collage_of_Nine_Dogs.jpg", correct: "Dog", distractors: ["Wolf", "Fox", "Bear"] },
+            { question: "What fruit is red?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/1200px-Red_Apple.jpg", correct: "Apple", distractors: ["Banana", "Grape", "Orange"] },
+            { question: "What fruit is yellow?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/1200px-Banana-Single.jpg", correct: "Banana", distractors: ["Apple", "Cherry", "Plum"] }
         ];
 
-        let vocabList = [];
+        let questionList = [];
         let winScore = DEFAULT_WIN_SCORE;
         let arenaImgData = DEFAULT_ARENA_IMG;
+        let typoSettings = {...DEFAULT_TYPO};
+        let customTexts = {...DEFAULT_TEXTS};
+        let backgrounds = JSON.parse(JSON.stringify(DEFAULT_BGS));
+
+        // --- CORE FUNCTIONS ---
+        function applyStylingAndTexts() {
+            document.documentElement.style.setProperty('--primary-font', typoSettings.family);
+            document.documentElement.style.setProperty('--base-font-size', typoSettings.size + 'px');
+            document.documentElement.style.setProperty('--text-dark', typoSettings.color);
+            document.documentElement.style.setProperty('--font-weight', typoSettings.weight);
+
+            document.getElementById('main-title-display').innerText = customTexts.mainTitle;
+            document.getElementById('subtitle-display').innerText = customTexts.subtitle;
+            document.getElementById('t1-name-display').innerText = customTexts.team1Name;
+            document.getElementById('t2-name-display').innerText = customTexts.team2Name;
+
+            renderBackgroundLayer('home-bg-layer', backgrounds.home);
+            renderBackgroundLayer('game-bg-layer', backgrounds.game);
+        }
+
+        function renderBackgroundLayer(layerId, bgObj) {
+            const layer = document.getElementById(layerId);
+            layer.innerHTML = '';
+            layer.className = 'bg-layer';
+
+            if (!bgObj.url || bgObj.url.trim() === '') {
+                layer.classList.add('css-bg');
+                return;
+            }
+
+            if (bgObj.type === 'video' || bgObj.url.match(/\.(mp4|webm|ogg)$/i)) {
+                layer.innerHTML = `<video autoplay loop muted playsinline><source src="${bgObj.url}"></video>`;
+            } else {
+                layer.innerHTML = `<img src="${bgObj.url}" alt="bg">`;
+            }
+        }
+
+        function buildPreview(containerId, bgObj) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if(!bgObj.url || bgObj.url.trim() === '') {
+                container.innerHTML = `<div style="width:100%; height:100%; background:#ddd; display:flex; align-items:center; justify-content:center; font-size:0.8em; color:#666;">Default</div>`;
+                return;
+            }
+            if (bgObj.type === 'video' || bgObj.url.match(/\.(mp4|webm|ogg)$/i)) {
+                container.innerHTML = `<video autoplay loop muted style="width:100%; height:100%; object-fit:cover; border-radius:12px;"><source src="${bgObj.url}"></video>`;
+            } else {
+                container.innerHTML = `<img src="${bgObj.url}" alt="bg" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+            }
+        }
 
         function loadSavedData() {
             try {
-                const savedVocab = localStorage.getItem('tugOfWarVocab');
-                const savedScore = localStorage.getItem('tugOfWarScore');
-                const savedArena = localStorage.getItem('tugOfWarArena');
+                const svQ = localStorage.getItem('tow_mcq_data');
+                const svScore = localStorage.getItem('tow_score_v4');
+                const svArena = localStorage.getItem('tow_arena_v4');
+                const svTypo = localStorage.getItem('tow_typo_v4');
+                const svTexts = localStorage.getItem('tow_texts_v4');
+                const svBgs = localStorage.getItem('tow_bgs_v4');
                 
-                if (savedVocab) vocabList = JSON.parse(savedVocab);
-                else vocabList = JSON.parse(JSON.stringify(DEFAULT_VOCAB)); 
+                questionList = svQ ? JSON.parse(svQ) : JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)); 
+                winScore = svScore ? parseInt(svScore) : DEFAULT_WIN_SCORE;
+                arenaImgData = svArena ? svArena : DEFAULT_ARENA_IMG;
+                typoSettings = svTypo ? JSON.parse(svTypo) : {...DEFAULT_TYPO};
+                customTexts = svTexts ? JSON.parse(svTexts) : {...DEFAULT_TEXTS};
+                backgrounds = svBgs ? JSON.parse(svBgs) : JSON.parse(JSON.stringify(DEFAULT_BGS));
 
-                if (savedScore) winScore = parseInt(savedScore);
-                else winScore = DEFAULT_WIN_SCORE;
-
-                if (savedArena) arenaImgData = savedArena;
-                else arenaImgData = DEFAULT_ARENA_IMG;
-
+                applyStylingAndTexts();
             } catch (e) {
-                console.error("Error loading saved data, resetting to defaults.", e);
-                vocabList = JSON.parse(JSON.stringify(DEFAULT_VOCAB)); 
-                winScore = DEFAULT_WIN_SCORE;
-                arenaImgData = DEFAULT_ARENA_IMG;
+                console.error("Error loading saved data", e);
+                resetToDefaults(true);
             }
         }
 
         loadSavedData();
 
-        // --- IMAGE UPLOAD & LINK LOGIC ---
-        function updateVocabPreviewFromUrl(index, url) {
-            if (!url) return;
-            vocabList[index].photo = url.trim();
-            document.getElementById(`preview-${index}`).src = url.trim();
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
-        function updateArenaFromUrl(url) {
-            if (!url) return;
-            arenaImgData = url.trim();
-            document.getElementById('arena-preview').src = url.trim();
+        function exportData() {
+            const dataObj = { questions: questionList, score: winScore, arena: arenaImgData, typography: typoSettings, texts: customTexts, backgrounds: backgrounds };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataObj));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "Tug_Of_War_Questions.json");
+            document.body.appendChild(dl);
+            dl.click(); dl.remove();
         }
 
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.questions) questionList = data.questions;
+                    if (data.score) winScore = parseInt(data.score) || DEFAULT_WIN_SCORE;
+                    if (data.arena) arenaImgData = data.arena;
+                    if (data.typography) typoSettings = data.typography;
+                    if (data.texts) customTexts = data.texts;
+                    if (data.backgrounds) backgrounds = data.backgrounds;
+
+                    saveToLocalStorage(); applyStylingAndTexts(); populateSettingsUI(); renderSettingsList();
+                    alert("✅ Settings imported successfully!");
+                } catch (err) { alert("❌ Invalid JSON file. Could not import."); }
+            };
+            reader.readAsText(file); event.target.value = '';
+        }
+
+        // --- MEDIA UPLOADS ---
         function handleImageUpload(event, index) {
             const file = event.target.files[0];
             if (!file) return;
-
-            document.getElementById(`photo-url-${index}`).value = '';
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 300; 
-                    let width = img.width; let height = img.height;
-                    if (width > height) {
-                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                    } else {
-                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    vocabList[index].photo = dataUrl;
-                    document.getElementById(`preview-${index}`).src = dataUrl;
+                    let w = img.width; let h = img.height;
+                    if (w > h) { if (w > 300) { h *= 300 / w; w = 300; } } else { if (h > 300) { w *= 300 / h; h = 300; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    questionList[index].photo = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById(`preview-${index}`).src = questionList[index].photo;
                 };
                 img.src = e.target.result;
             };
@@ -482,25 +669,15 @@
         function handleArenaImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            document.getElementById('arena-url-input').value = '';
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800; 
-                    let width = img.width; let height = img.height;
-                    if (width > height) {
-                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                    } else {
-                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
+                    let w = img.width; let h = img.height;
+                    if (w > h) { if (w > 800) { h *= 800 / w; w = 800; } } else { if (h > 800) { w *= 800 / h; h = 800; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     arenaImgData = canvas.toDataURL('image/png', 0.9);
                     document.getElementById('arena-preview').src = arenaImgData;
                 };
@@ -509,163 +686,201 @@
             reader.readAsDataURL(file);
         }
 
-        // --- SETTINGS UI FUNCTIONS ---
-        function openSettings() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('settings-screen').style.display = 'flex';
-            
+        function handleBackgroundUpload(event, type) {
+            const file = event.target.files[0];
+            const warningEl = document.getElementById(`${type}-bg-warning`);
+            warningEl.innerText = '';
+            if (!file) return;
+
+            if (file.size > 2.5 * 1024 * 1024) {
+                warningEl.innerText = '⚠️ File is large. Saving may fail. Consider using a URL link instead.';
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const isVideo = file.type.startsWith('video/');
+                document.getElementById(`${type}-bg-url`).value = e.target.result; // Set data URL in the input field
+                buildPreview(`${type}-bg-preview-container`, { type: isVideo ? 'video' : 'image', url: e.target.result });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- DASHBOARD UI ---
+        function populateSettingsUI() {
             document.getElementById('win-score-input').value = winScore;
             document.getElementById('arena-preview').src = arenaImgData;
             
-            if (arenaImgData && !arenaImgData.startsWith('data:image')) {
-                document.getElementById('arena-url-input').value = arenaImgData;
-            } else {
-                document.getElementById('arena-url-input').value = '';
-            }
+            document.getElementById('text-maintitle').value = customTexts.mainTitle;
+            document.getElementById('text-subtitle').value = customTexts.subtitle;
+            document.getElementById('text-team1').value = customTexts.team1Name;
+            document.getElementById('text-team2').value = customTexts.team2Name;
 
-            renderSettingsList();
+            document.getElementById('typo-family').value = typoSettings.family;
+            document.getElementById('typo-size').value = typoSettings.size;
+            document.getElementById('typo-color').value = typoSettings.color;
+            document.getElementById('typo-weight').value = typoSettings.weight;
+
+            document.getElementById('home-bg-url').value = backgrounds.home.url.startsWith('data:') ? '' : backgrounds.home.url;
+            document.getElementById('game-bg-url').value = backgrounds.game.url.startsWith('data:') ? '' : backgrounds.game.url;
+            
+            buildPreview('home-bg-preview-container', backgrounds.home);
+            buildPreview('game-bg-preview-container', backgrounds.game);
         }
 
+        function openSettings() {
+            document.getElementById('home-bg-layer').style.display = 'none';
+            document.getElementById('game-bg-layer').style.display = 'none';
+            document.getElementById('main-title-display').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'flex';
+            populateSettingsUI(); renderSettingsList(); switchTab('tab-questions'); 
+        }
+
+        function cancelSettings() { loadSavedData(); showStartScreen(); }
+
         function renderSettingsList() {
-            const container = document.getElementById('settings-vocab-list');
+            const container = document.getElementById('settings-questions-list');
             container.innerHTML = '';
             
-            vocabList.forEach((item, index) => {
-                const displayUrl = item.photo.startsWith('data:image') ? '' : item.photo;
-
-                const row = document.createElement('div');
-                row.className = 'settings-row';
-                row.innerHTML = `
-                    <input type="text" id="word-${index}" class="word-input" value="${item.word}" placeholder="Word">
-                    <div class="img-preview-box">
-                        <img id="preview-${index}" src="${item.photo}" alt="Image Error">
-                        <div class="upload-controls">
-                            <input type="text" id="photo-url-${index}" class="url-input" value="${displayUrl}" placeholder="Paste Link Here..." onchange="updateVocabPreviewFromUrl(${index}, this.value)">
-                            <span style="font-size: 0.8rem; text-align: center; color: #666; margin: 2px 0;">- OR UPLOAD -</span>
-                            <input type="file" id="file-${index}" accept="image/*" onchange="handleImageUpload(event, ${index})">
+            questionList.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-edit-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; gap: 15px;">
+                        <input type="text" id="q-text-${index}" value="${item.question}" placeholder="Question text (e.g. What is this?)" style="width: 100%; font-size: 1.2em; border: 3px solid #ccc; border-radius: 8px; padding: 10px;">
+                        <button class="delete-btn" onclick="deleteQuestion(${index})">🗑️</button>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 15px; align-items: stretch;">
+                        <div class="img-preview-box" style="width: 30%; display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                            <img id="preview-${index}" src="${item.photo}" alt="Img" style="width:80px; height:80px;">
+                            <input type="file" id="file-${index}" accept="image/*" onchange="handleImageUpload(event, ${index})" style="width: 100%; padding: 5px;">
+                        </div>
+                        <div style="width: 70%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" id="q-correct-${index}" value="${item.correct}" placeholder="✅ Correct Answer" style="border: 3px solid #2ED573; border-radius: 8px; padding: 10px; font-weight: bold;">
+                            <input type="text" id="q-w1-${index}" value="${item.distractors[0]}" placeholder="❌ Wrong Choice 1" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
+                            <input type="text" id="q-w2-${index}" value="${item.distractors[1]}" placeholder="❌ Wrong Choice 2" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
+                            <input type="text" id="q-w3-${index}" value="${item.distractors[2]}" placeholder="❌ Wrong Choice 3" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
                         </div>
                     </div>
-                    <button class="delete-btn" onclick="deleteVocab(${index})">🗑️</button>
                 `;
-                container.appendChild(row);
+                container.appendChild(card);
             });
         }
 
-        function addNewVocabRow() {
-            vocabList.push({ word: "New Word", photo: "" });
+        function addNewQuestion() {
+            questionList.push({ question: "New Question?", photo: DEFAULT_ARENA_IMG, correct: "Correct", distractors: ["Wrong 1", "Wrong 2", "Wrong 3"] });
             renderSettingsList();
-            const screen = document.getElementById('settings-screen');
-            screen.scrollTop = screen.scrollHeight;
+            const tab = document.getElementById('tab-questions');
+            tab.scrollTop = tab.scrollHeight;
         }
 
-        function deleteVocab(index) {
-            if(vocabList.length <= 4) {
-                alert("You must have at least 4 words to play the game!");
-                return;
-            }
-            vocabList.splice(index, 1);
+        function deleteQuestion(index) {
+            if(questionList.length <= 4) { alert("You must have at least 4 questions to play the game!"); return; }
+            questionList.splice(index, 1);
             renderSettingsList();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('tow_mcq_data', JSON.stringify(questionList));
+            localStorage.setItem('tow_score_v4', winScore.toString());
+            localStorage.setItem('tow_arena_v4', arenaImgData);
+            localStorage.setItem('tow_typo_v4', JSON.stringify(typoSettings));
+            localStorage.setItem('tow_texts_v4', JSON.stringify(customTexts));
+            localStorage.setItem('tow_bgs_v4', JSON.stringify(backgrounds));
         }
 
         function saveSettingsAndClose() {
             try {
-                for (let i = 0; i < vocabList.length; i++) {
-                    vocabList[i].word = document.getElementById(`word-${i}`).value;
-                    
-                    let urlInput = document.getElementById(`photo-url-${i}`).value;
-                    if (urlInput && urlInput.trim() !== '') {
-                        vocabList[i].photo = urlInput.trim();
-                    }
-                }
+                customTexts.mainTitle = document.getElementById('text-maintitle').value || DEFAULT_TEXTS.mainTitle;
+                customTexts.subtitle = document.getElementById('text-subtitle').value || DEFAULT_TEXTS.subtitle;
+                customTexts.team1Name = document.getElementById('text-team1').value || DEFAULT_TEXTS.team1Name;
+                customTexts.team2Name = document.getElementById('text-team2').value || DEFAULT_TEXTS.team2Name;
+
+                typoSettings.family = document.getElementById('typo-family').value;
+                typoSettings.size = parseInt(document.getElementById('typo-size').value) || 16;
+                typoSettings.color = document.getElementById('typo-color').value;
+                typoSettings.weight = document.getElementById('typo-weight').value;
                 
-                let arenaUrlInput = document.getElementById('arena-url-input').value;
-                if (arenaUrlInput && arenaUrlInput.trim() !== '') {
-                    arenaImgData = arenaUrlInput.trim();
+                const homeUrl = document.getElementById('home-bg-url').value.trim();
+                backgrounds.home.url = homeUrl;
+                backgrounds.home.type = (homeUrl.match(/\.(mp4|webm|ogg)$/i) || homeUrl.startsWith('data:video/')) ? 'video' : 'image';
+
+                const gameUrl = document.getElementById('game-bg-url').value.trim();
+                backgrounds.game.url = gameUrl;
+                backgrounds.game.type = (gameUrl.match(/\.(mp4|webm|ogg)$/i) || gameUrl.startsWith('data:video/')) ? 'video' : 'image';
+                
+                for (let i = 0; i < questionList.length; i++) {
+                    questionList[i].question = document.getElementById(`q-text-${i}`).value;
+                    questionList[i].correct = document.getElementById(`q-correct-${i}`).value;
+                    questionList[i].distractors[0] = document.getElementById(`q-w1-${i}`).value;
+                    questionList[i].distractors[1] = document.getElementById(`q-w2-${i}`).value;
+                    questionList[i].distractors[2] = document.getElementById(`q-w3-${i}`).value;
                 }
+                winScore = parseInt(document.getElementById('win-score-input').value) || 5;
 
-                winScore = parseInt(document.getElementById('win-score-input').value) || 16;
-
-                localStorage.setItem('tugOfWarVocab', JSON.stringify(vocabList));
-                localStorage.setItem('tugOfWarScore', winScore.toString());
-                localStorage.setItem('tugOfWarArena', arenaImgData);
-
+                saveToLocalStorage();
+                applyStylingAndTexts();
                 document.getElementById('arena-main-img').src = arenaImgData;
 
-                alert("Settings Saved successfully!");
                 showStartScreen();
             } catch (e) {
-                alert("Error saving! You may have uploaded too many images. Try deleting some words or using smaller files.");
-                console.error(e);
+                alert("Error saving! Check data sizes (especially uploaded backgrounds) or try using URLs instead.");
             }
         }
 
-        function resetToDefaults() {
-            if(confirm("Are you sure? This will delete all your custom images/words and restore the original list.")) {
-                localStorage.removeItem('tugOfWarVocab');
-                localStorage.removeItem('tugOfWarScore');
-                localStorage.removeItem('tugOfWarArena');
-                loadSavedData();
-                document.getElementById('arena-url-input').value = '';
-                document.getElementById('win-score-input').value = winScore;
-                document.getElementById('arena-preview').src = arenaImgData;
-                renderSettingsList();
+        function resetToDefaults(silent = false) {
+            if(silent || confirm("Are you sure? This will delete all custom questions, images, and texts.")) {
+                localStorage.clear();
+                questionList = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)); 
+                winScore = DEFAULT_WIN_SCORE;
+                arenaImgData = DEFAULT_ARENA_IMG;
+                typoSettings = {...DEFAULT_TYPO};
+                customTexts = {...DEFAULT_TEXTS};
+                backgrounds = JSON.parse(JSON.stringify(DEFAULT_BGS));
+                
+                if(!silent) { populateSettingsUI(); renderSettingsList(); applyStylingAndTexts(); }
             }
         }
 
         function showStartScreen() {
+            document.getElementById('home-bg-layer').style.display = 'block';
+            document.getElementById('game-bg-layer').style.display = 'none';
+            document.getElementById('main-title-display').style.display = 'block';
             document.getElementById('settings-screen').style.display = 'none';
             document.getElementById('win-overlay').style.display = 'none';
             document.getElementById('main-layout').style.display = 'none'; 
             document.getElementById('in-game-controls').style.display = 'none';
             document.getElementById('start-screen').style.display = 'flex';
-            
-            try {
-                const bgMusic = document.getElementById('bg-music');
-                bgMusic.pause();
-            } catch(e) {}
         }
 
-
-        // --- GAMEPLAY LOGIC ---
-        let gameOver = false;
-        let ropePos = 50; 
-        let t1Stack = [], t2Stack = [];
-        let t1Index = 0, t2Index = 0;
-
-        let audioCtx = null;
+        // --- GAMEPLAY ENGINE (Audio API & Mechanics) ---
+        let gameOver = false; let ropePos = 50; let t1Stack = [], t2Stack = []; let t1Index = 0, t2Index = 0; let audioCtx = null;
         
         function playSound(type) {
             try {
                 if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 
                 if (type === 'correct') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                    gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    osc.start(now); osc.stop(now + 0.2);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.15);
+                    gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
                 } else if (type === 'wrong') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-                    gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    osc.start(now); osc.stop(now + 0.2);
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
+                    gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
                 } else if (type === 'pull') {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(80, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-                    gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
+                    osc.type = 'square'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2);
                 } else if (type === 'win') {
-                    [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    [440, 554.37, 659.25, 880, 1108.73, 1318.51].forEach((f, i) => {
                         const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
                         const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-                        g.gain.setValueAtTime(0, now + i*0.1); g.gain.linearRampToValueAtTime(0.3, now + i*0.1 + 0.05);
-                        g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
-                        o.start(now + i*0.1); o.stop(now + i*0.1 + 0.5);
+                        g.gain.setValueAtTime(0, now + i*0.08); g.gain.linearRampToValueAtTime(0.4, now + i*0.08 + 0.04);
+                        g.gain.linearRampToValueAtTime(0, now + i*0.08 + 0.6); o.start(now + i*0.08); o.stop(now + i*0.08 + 0.6);
                     });
                 }
-            } catch(e) { console.log("Audio skipped or not supported", e); }
+            } catch(e) {}
         }
 
         function shuffle(arr) {
@@ -678,163 +893,111 @@
         }
 
         function resetFeedback(teamNum) {
-            const teamContainer = document.getElementById(`team${teamNum}`);
-            const allCards = teamContainer.querySelectorAll('.card');
-            allCards.forEach(c => c.classList.remove('pressed', 'correct', 'wrong', 'disabled'));
-            teamContainer.classList.remove('shake');
+            const tc = document.getElementById(`team${teamNum}`);
+            tc.querySelectorAll('.card').forEach(c => c.classList.remove('pressed', 'correct', 'wrong', 'disabled'));
+            tc.classList.remove('shake');
         }
 
         function triggerBurst(teamNum) {
             const burst = document.getElementById(teamNum === 1 ? 'burst-left' : 'burst-right');
             burst.style.background = `radial-gradient(circle, var(--team${teamNum}-color) 0%, transparent 70%)`;
-            burst.style.display = 'block';
-            burst.style.animation = 'none';
-            setTimeout(() => burst.style.animation = 'pop 0.4s ease-out forwards', 10);
+            burst.style.display = 'block'; burst.style.animation = 'none';
+            setTimeout(() => burst.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 10);
         }
 
         function loadQuestion(teamNum) {
-            let index = teamNum === 1 ? t1Index : t2Index;
-            let stack = teamNum === 1 ? t1Stack : t2Stack;
-
-            const photoEl = document.getElementById(`t${teamNum}-photo`);
+            let index = teamNum === 1 ? t1Index : t2Index; let stack = teamNum === 1 ? t1Stack : t2Stack;
             const container = document.getElementById(`t${teamNum}-cards`);
+            const qDisplay = document.getElementById(`t${teamNum}-question-display`);
 
             resetFeedback(teamNum);
+            const target = questionList[stack[index % questionList.length]];
+            qDisplay.innerText = target.question;
+            document.getElementById(`t${teamNum}-photo`).innerHTML = `<img src="${target.photo}">`;
             
-            const actualIndex = stack[index % vocabList.length];
-            const target = vocabList[actualIndex];
-
-            let choices = [target.word];
-            let attempts = 0;
-            while(choices.length < 4 && attempts < 100) {
-                const randWord = vocabList[Math.floor(Math.random() * vocabList.length)].word;
-                if (!choices.includes(randWord)) choices.push(randWord);
-                attempts++;
-            }
+            // Randomizer scrambles choices every load
+            let choices = [target.correct, ...target.distractors];
             choices = shuffle(choices);
-
-            photoEl.innerHTML = `<img src="${target.photo}" alt="Image Error">`;
-
             container.innerHTML = ''; 
 
             choices.forEach(choice => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerText = choice;
-                
-                const handleInput = (e) => {
-                    e.preventDefault(); 
-                    handleGuess(teamNum, choice, target.word, card);
-                };
-
+                const card = document.createElement('div'); card.className = 'card'; card.innerText = choice;
+                const handleInput = (e) => { e.preventDefault(); handleGuess(teamNum, choice, target.correct, card); };
                 card.addEventListener('touchstart', handleInput, {passive: false});
                 card.addEventListener('mousedown', handleInput);
-                
                 container.appendChild(card);
             });
         }
 
         function handleGuess(teamNum, guess, correctWord, clickedCard) {
             if (gameOver) return;
+            const tc = document.getElementById(`team${teamNum}`);
+            const allCards = tc.querySelectorAll('.card');
 
-            const teamContainer = document.getElementById(`team${teamNum}`);
-            const allCards = teamContainer.querySelectorAll('.card');
+            if (Array.from(allCards).some(c => c.classList.contains('disabled'))) return;
 
-            const isTeamDisabled = Array.from(allCards).some(c => c.classList.contains('disabled'));
-            if (isTeamDisabled) return;
-
-            resetFeedback(teamNum);
-            clickedCard.classList.add('pressed');
+            resetFeedback(teamNum); clickedCard.classList.add('pressed');
 
             if (guess === correctWord) {
-                playSound('correct');
-                clickedCard.classList.add('correct');
-                triggerBurst(teamNum);
-                
+                playSound('correct'); clickedCard.classList.add('correct'); triggerBurst(teamNum);
                 if (teamNum === 1) t1Index++; else t2Index++;
                 
-                // Keep the underlying tug of war score logic running perfectly
-                ropePos = 50 + (t2Index - t1Index) * (20 / winScore);
+                ropePos = 50 + (t2Index - t1Index) * (25 / winScore);
+                if (t1Index >= winScore) ropePos = 25; else if (t2Index >= winScore) ropePos = 75;
 
-                if (t1Index >= winScore) ropePos = 30; 
-                else if (t2Index >= winScore) ropePos = 70;
-
-                document.getElementById('tug-group').style.left = ropePos + "%";
-                playSound('pull');
-
+                document.getElementById('tug-group').style.left = ropePos + "%"; playSound('pull');
                 allCards.forEach(c => c.classList.add('disabled'));
 
-                if (t1Index >= winScore || t2Index >= winScore) {
-                    setTimeout(() => checkWinCondition(), 600); 
-                } else {
-                    setTimeout(() => loadQuestion(teamNum), 600);
-                }
-
+                if (t1Index >= winScore || t2Index >= winScore) setTimeout(() => checkWinCondition(), 700); 
+                else setTimeout(() => loadQuestion(teamNum), 700);
             } else {
-                playSound('wrong');
-                clickedCard.classList.add('wrong');
-                teamContainer.classList.add('shake');
+                playSound('wrong'); clickedCard.classList.add('wrong'); tc.classList.add('shake');
             }
         }
 
         function checkWinCondition() {
-            if (t1Index >= winScore) endGame("Team 1 Wins!");
-            else if (t2Index >= winScore) endGame("Team 2 Wins!");
+            if (t1Index >= winScore) endGame(`${customTexts.team1Name} Wins!`);
+            else if (t2Index >= winScore) endGame(`${customTexts.team2Name} Wins!`);
         }
 
         function endGame(message) {
-            gameOver = true;
-            playSound('win');
-            try {
-                const bgMusic = document.getElementById('bg-music');
-                bgMusic.pause(); 
-            } catch(e){}
-            
-            document.getElementById('win-text').innerText = message;
+            gameOver = true; playSound('win');
+            document.getElementById('win-text-display').innerText = message;
             document.getElementById('in-game-controls').style.display = 'none';
             document.getElementById('win-overlay').style.display = 'flex';
         }
 
-        function restartMatch() {
-            if(confirm("Are you sure you want to restart the current game?")) {
-                startGame();
-            }
-        }
+        function restartMatch() { if(confirm("Restart the current game?")) startGame(); }
 
         function startGame() {
-            if (!vocabList || vocabList.length < 4) {
-                alert("Please add at least 4 words in Teacher Settings to play!");
-                return;
-            }
-
+            if (!questionList || questionList.length < 4) { alert("Add at least 4 questions in the Dashboard to play!"); return; }
             try {
-                if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                const bgMusic = document.getElementById('bg-music');
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(e => console.log("Background music blocked by browser autoplay rules."));
-            } catch (e) { console.log("Audio initialization skipped.", e); }
+            } catch (e) {}
             
             document.getElementById('arena-main-img').src = arenaImgData;
+            document.getElementById('main-title-display').style.display = 'block';
+            
+            // Switch Backgrounds
+            document.getElementById('home-bg-layer').style.display = 'none';
+            document.getElementById('game-bg-layer').style.display = 'block';
 
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('win-overlay').style.display = 'none';
             document.getElementById('main-layout').style.display = 'flex'; 
-            document.getElementById('in-game-controls').style.display = 'block';
+            document.getElementById('in-game-controls').style.display = 'flex';
             
-            gameOver = false;
-            ropePos = 50;
-            t1Index = 0;
-            t2Index = 0;
+            gameOver = false; ropePos = 50; t1Index = 0; t2Index = 0;
             document.getElementById('tug-group').style.left = "50%";
 
-            const indices = Array.from({length: vocabList.length}, (_, i) => i);
-            t1Stack = shuffle([...indices]);
-            t2Stack = shuffle([...indices]);
-
-            loadQuestion(1);
-            loadQuestion(2);
+            const indices = Array.from({length: questionList.length}, (_, i) => i);
+            t1Stack = shuffle([...indices]); t2Stack = shuffle([...indices]);
+            loadQuestion(1); loadQuestion(2);
         }
+        
+        // Initialize Default View
+        showStartScreen();
     </script>
 </body>
 </html>
