@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sanxing Elementary Tournament Tug-of-War</title>
+    <title>Tug-of-Words</title>
     <style>
         :root {
             /* Dynamic Variables updated by Dashboard */
@@ -50,8 +50,9 @@
         
         button, input, select { font-family: var(--primary-font); font-weight: var(--font-weight); }
 
+        /* Titles */
         h1.main-title {
-            color: #ffffff; margin: 15px 0; font-size: 3em; letter-spacing: 2px;
+            color: #ffffff; margin: 15px 0; letter-spacing: 2px;
             text-shadow: 4px 4px 0 var(--text-dark), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark);
             z-index: 10;
         }
@@ -78,8 +79,39 @@
         }
         .active-screen { display: flex; }
 
-        #start-screen { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px); }
-        #subtitle-display { font-size: 5em; color: white; text-shadow: 4px 4px 0 var(--text-dark); animation: bounce 2s infinite; margin-bottom: 20px;}
+        #start-screen { 
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(5px); 
+            position: relative;
+        }
+        
+        /* Swapped Title Hierarchy */
+        #main-title-display { 
+            font-size: 6em; /* Massive main title */
+            color: white; 
+            text-shadow: 6px 6px 0 var(--text-dark); 
+            animation: bounce 2s infinite; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        #subtitle-display { 
+            font-size: 2em; /* Smaller subtitle */
+            color: white; 
+            text-shadow: 2px 2px 0 var(--text-dark); 
+            margin-bottom: 40px;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            font-weight: normal;
+        }
+
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-30px); } 60% { transform: translateY(-15px); } }
 
         /* --- Tournament Setup & Status --- */
@@ -182,10 +214,11 @@
 
     <!-- 1. Start Screen -->
     <div id="start-screen" class="screen active-screen">
-        <h1 class="main-title" id="main-title-display">Sanxing Elementary Tug-of-War</h1>
-        <h2 id="subtitle-display">EPIC TOURNAMENT</h2>
+        <h1 class="main-title" id="main-title-display">TUG-OF-WORDS</h1>
+        <h2 id="subtitle-display">A Knowledge-Test Game Based on Classic Tug-of-War</h2>
         <button class="btn" onclick="openSetup()">🏆 Start Tournament</button>
-        <button class="btn btn-small" style="background:#A8DADC;" onclick="openDashboard()">⚙️ Teacher Cris's Dashboard</button>
+        <button class="btn btn-small" style="background:#A8DADC;" onclick="openDashboard()">⚙️ Teacher Dashboard</button>
+        <div class="footer">Made by Teacher Cris Saranza</div>
     </div>
 
     <!-- 2. Tournament Setup Screen -->
@@ -222,7 +255,7 @@
 
     <!-- 4. Game Screen (Tug of War) -->
     <div id="game-screen" class="screen">
-        <h1 class="main-title" id="game-title-display">Sanxing Elementary Tug-of-War</h1>
+        <h1 class="main-title" id="game-title-display" style="font-size: 2.5em;">Post Office Tug-of-Words</h1>
         <div id="game-layout">
             <div id="team1" class="team-column">
                 <h2 class="team-title" id="t1-name">Team 1</h2>
@@ -265,7 +298,7 @@
     <!-- 6. Ultimate Teacher Dashboard -->
     <div id="dashboard-screen" class="screen" style="background: rgba(0,0,0,0.7);">
         <div class="panel-box">
-            <h2 style="margin-top:0; border-bottom: 3px solid #ccc; padding-bottom: 10px;">⚙️ Master Dashboard</h2>
+            <h2 style="margin-top:0; border-bottom: 3px solid #ccc; padding-bottom: 10px;">⚙️ Teacher Dashboard</h2>
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('tab-q')">❓ Questions</button>
                 <button class="tab-btn" onclick="switchTab('tab-txt')">✏️ Texts</button>
@@ -287,12 +320,16 @@
                 <!-- TAB 2: TEXTS -->
                 <div id="tab-txt" class="tab-panel">
                     <div class="settings-row">
-                        <label>Main Title (Top):</label>
-                        <input type="text" id="dash-maintitle" value="Sanxing Elementary Tug-of-War">
+                        <label>Homepage Main Title (Top):</label>
+                        <input type="text" id="dash-maintitle" value="TUG-OF-WORDS">
                     </div>
                     <div class="settings-row">
-                        <label>Start Screen Subtitle:</label>
-                        <input type="text" id="dash-subtitle" value="EPIC TOURNAMENT">
+                        <label>Homepage Subtitle:</label>
+                        <input type="text" id="dash-subtitle" value="A Knowledge-Test Game Based on Classic Tug-of-War">
+                    </div>
+                    <div class="settings-row" style="background: #e8f4f8; border-color: #3498DB;">
+                        <label>In-Game Title (Displays while playing):</label>
+                        <input type="text" id="dash-ingametitle" value="Post Office Tug-of-Words">
                     </div>
                     <p style="color:#666; font-size:1.1em;">* Note: Team names are entered when starting the tournament.</p>
                 </div>
@@ -385,7 +422,11 @@
         const DEFAULT_DATA = {
             winScore: 5,
             typo: { family: "'Century Gothic', 'AppleGothic', system-ui, sans-serif", size: 16, color: "#2C3E50", weight: "bold" },
-            texts: { main: "Sanxing Elementary Tug-of-War", sub: "EPIC TOURNAMENT" },
+            texts: { 
+                main: "TUG-OF-WORDS", 
+                sub: "A Knowledge-Test Game Based on Classic Tug-of-War",
+                inGameTitle: "Post Office Tug-of-Words"
+            },
             bgs: { 
                 home: { type: "video", url: "tug.mp4" }, 
                 game: { type: "css", url: "" } 
@@ -402,15 +443,18 @@
         let gData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
         function loadData() {
-            const saved = localStorage.getItem('tow_master_data_v2');
+            const saved = localStorage.getItem('tow_master_data_v3');
             if(saved) {
                 try { gData = JSON.parse(saved); } catch(e) { console.error(e); }
             }
+            // Ensure backwards compatibility if adding new keys like inGameTitle
+            if(!gData.texts.inGameTitle) gData.texts.inGameTitle = DEFAULT_DATA.texts.inGameTitle;
+            
             applySettings();
         }
 
         function saveData() {
-            localStorage.setItem('tow_master_data_v2', JSON.stringify(gData));
+            localStorage.setItem('tow_master_data_v3', JSON.stringify(gData));
             applySettings();
         }
 
@@ -423,8 +467,8 @@
 
             // Texts
             document.getElementById('main-title-display').innerText = gData.texts.main;
-            document.getElementById('game-title-display').innerText = gData.texts.main;
             document.getElementById('subtitle-display').innerText = gData.texts.sub;
+            document.getElementById('game-title-display').innerText = gData.texts.inGameTitle;
 
             // Backgrounds
             renderBg('home-bg-layer', gData.bgs.home);
@@ -663,6 +707,7 @@
             
             document.getElementById('dash-maintitle').value = gData.texts.main;
             document.getElementById('dash-subtitle').value = gData.texts.sub;
+            document.getElementById('dash-ingametitle').value = gData.texts.inGameTitle;
 
             document.getElementById('dash-font-family').value = gData.typo.family;
             document.getElementById('dash-font-size').value = gData.typo.size;
@@ -757,6 +802,7 @@
                 
                 gData.texts.main = document.getElementById('dash-maintitle').value || DEFAULT_DATA.texts.main;
                 gData.texts.sub = document.getElementById('dash-subtitle').value || DEFAULT_DATA.texts.sub;
+                gData.texts.inGameTitle = document.getElementById('dash-ingametitle').value || DEFAULT_DATA.texts.inGameTitle;
 
                 gData.typo.family = document.getElementById('dash-font-family').value;
                 gData.typo.size = parseInt(document.getElementById('dash-font-size').value) || 16;
