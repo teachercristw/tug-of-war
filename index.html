@@ -91,7 +91,7 @@
 
         h2 { font-size: 3rem; color: var(--text-dark); margin-bottom: 20px; }
 
-        button.action-btn {
+        .action-btn {
             background-color: var(--accent-color);
             color: #fff;
             border: 4px solid var(--text-dark);
@@ -104,8 +104,9 @@
             transition: all 0.1s;
             font-family: var(--primary-font);
             margin: 10px;
+            display: inline-block;
         }
-        button.action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--text-dark); }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--text-dark); }
 
         button.settings-btn {
             background-color: #A8DADC;
@@ -188,7 +189,7 @@
             text-align: center;
         }
 
-        #arena-preview { width: 120px; height: 60px; object-fit: contain; }
+        #arena-preview { width: 120px; height: 60px; object-fit: contain; background: transparent; border: none;}
 
         .delete-btn { background: #E63946; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 10%;}
         .add-btn { background: #2A9D8F; color: white; border: 2px solid var(--text-dark); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; width: 100%; margin-top: 10px; }
@@ -242,6 +243,7 @@
         #center-line { left: 50%; border-left: 4px dashed rgba(38, 70, 83, 0.5); transform: translateX(-50%); }
         #win-line-right { left: 70%; border-left: 6px solid var(--team2-color); transform: translateX(-50%); box-shadow: 0 0 10px var(--team2-color); }
 
+        /* --- FIXED SIZING FOR ARENA IMAGE --- */
         #tug-group {
             position: absolute;
             left: 50%;
@@ -249,14 +251,21 @@
             transform: translate(-50%, -50%);
             z-index: 2;
             transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            height: 40%; 
+            /* Bounded dimensions so it doesn't stretch */
+            width: 80%;
+            height: 80%;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 250%; 
         }
 
-        #tug-group img { height: 100%; width: auto; display: block; pointer-events: none; }
+        #tug-group img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; /* Forces perfect aspect ratio fitting */
+            display: block; 
+            pointer-events: none; 
+        }
 
         /* --- Team UI Elements --- */
         .team-title { font-size: 2.2rem; margin: 0 0 10px 0; color: var(--text-dark); text-shadow: 1px 1px 0 #fff; }
@@ -269,7 +278,7 @@
             display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
         }
 
-        .photo-display img { width: 100%; height: 100%; object-fit: cover; background: #eee; }
+        .photo-display img { width: 100%; height: 100%; object-fit: cover; background: #eee; font-size: 0.8rem; color: red;}
 
         .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; }
 
@@ -320,8 +329,15 @@
     <div id="settings-screen">
         <h2 style="margin-top: 50px;">⚙️ Teacher Dashboard</h2>
         
-        <div style="background: #e9ecef; border: 2px dashed #adb5bd; padding: 10px; border-radius: 10px; margin-bottom: 20px; max-width: 800px;">
-            <p style="margin:0; font-size: 1.1rem; color: #d90429;"><b>💡 TIP:</b> Image links from Google Drive or other sites are often blocked by security rules. <b>For the best results, use the "Choose File" button to upload pictures directly from your computer!</b></p>
+        <div class="settings-panel" style="background: #e9ecef; border: 2px dashed #adb5bd; text-align: center;">
+            <h3 style="margin-top:0; color: var(--text-dark);">Transfer Settings Between Computers</h3>
+            <p style="font-size: 1rem; color: #666;">Export your custom game settings as a JSON file to easily load them on another computer.</p>
+            <button class="action-btn" style="background:#457B9D; font-size: 1.2rem; padding: 10px 20px;" onclick="exportSettings()">📥 Export Settings (JSON)</button>
+            
+            <label class="action-btn" style="background:#2A9D8F; font-size: 1.2rem; padding: 10px 20px; cursor: pointer;">
+                📤 Import Settings (JSON)
+                <input type="file" accept=".json" style="display:none;" onchange="importSettings(event)">
+            </label>
         </div>
 
         <div class="settings-panel">
@@ -330,7 +346,7 @@
                 <div class="img-preview-box" style="width: 100%;">
                     <img id="arena-preview" src="" alt="Image Error">
                     <div class="upload-controls">
-                        <input type="text" id="arena-url-input" class="url-input" placeholder="Paste Image Link Here (e.g. https://...)" onchange="updateArenaFromUrl(this.value)">
+                        <input type="text" id="arena-url-input" class="url-input" placeholder="Paste Image/GIF Link Here (e.g. https://...)" onchange="updateArenaFromUrl(this.value)">
                         <span style="font-size: 0.8rem; text-align: center; color: #666; margin: 2px 0;">- OR HIGHLY RECOMMENDED -</span>
                         <input type="file" accept="image/*" onchange="handleArenaImageUpload(event)">
                     </div>
@@ -374,7 +390,7 @@
             <div id="win-line-right" class="vertical-line"></div>
             
             <div id="tug-group">
-                <img id="arena-main-img" src="" alt="Image Error">
+                <img id="arena-main-img" src="" alt="Arena Visual">
             </div>
             
             <div id="burst-left" style="left: 30%; display:none;" class="burst"></div>
@@ -397,7 +413,7 @@
     <script>
         // --- TEACHER EDITABLE DATA & LOCAL STORAGE LOGIC ---
         const DEFAULT_WIN_SCORE = 16;
-        const DEFAULT_ARENA_IMG = "tug.gif"; // Updated Default Image!
+        const DEFAULT_ARENA_IMG = "tug.gif"; 
         
         const DEFAULT_VOCAB = [
             { word: "postcard", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Postcard_from_Sweden.jpg/400px-Postcard_from_Sweden.jpg" },
@@ -446,6 +462,53 @@
         }
 
         loadSavedData();
+
+        // --- JSON EXPORT / IMPORT ---
+        function exportSettings() {
+            const dataToSave = {
+                vocab: vocabList,
+                score: winScore,
+                arena: arenaImgData
+            };
+            const dataStr = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "tag-of-war-settings.json";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importSettings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.vocab) vocabList = importedData.vocab;
+                    if (importedData.score) winScore = importedData.score;
+                    if (importedData.arena) arenaImgData = importedData.arena;
+                    
+                    // Force save the newly imported data to the browser
+                    localStorage.setItem('tugOfWarVocab', JSON.stringify(vocabList));
+                    localStorage.setItem('tugOfWarScore', winScore.toString());
+                    localStorage.setItem('tugOfWarArena', arenaImgData);
+                    
+                    alert("Settings imported successfully!");
+                    openSettings(); // Refresh the settings UI
+                } catch (err) {
+                    alert("Error! Invalid JSON file.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        }
 
         // --- IMAGE UPLOAD & LINK LOGIC ---
         function updateVocabPreviewFromUrl(index, url) {
@@ -499,6 +562,13 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
+                // If it's a GIF, don't use canvas (canvas breaks GIF animations). Just convert file directly to base64.
+                if(file.type === "image/gif") {
+                    arenaImgData = e.target.result;
+                    document.getElementById('arena-preview').src = arenaImgData;
+                    return;
+                }
+
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
@@ -513,7 +583,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    // Fallback to png to maintain possible transparency
                     arenaImgData = canvas.toDataURL('image/png', 0.9);
                     document.getElementById('arena-preview').src = arenaImgData;
                 };
@@ -582,7 +651,6 @@
 
         function saveSettingsAndClose() {
             try {
-                // Save text inputs
                 for (let i = 0; i < vocabList.length; i++) {
                     vocabList[i].word = document.getElementById(`word-${i}`).value;
                     
@@ -727,7 +795,7 @@
             }
             choices = shuffle(choices);
 
-            photoEl.innerHTML = `<img src="${target.photo}" alt="Image Error">`;
+            photoEl.innerHTML = `<img src="${target.photo}" onerror="this.src=''" alt="Question Image">`;
 
             container.innerHTML = ''; 
 
