@@ -3,26 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Teacher Cris's Tug-of-War</title>
+    <title>Sanxing Elementary Tournament Tug-of-War</title>
     <style>
         :root {
+            /* Dynamic Variables updated by Dashboard */
             --primary-font: 'Century Gothic', 'AppleGothic', system-ui, sans-serif;
             --base-font-size: 16px;
             --font-weight: bold;
             --text-dark: #2C3E50; 
-
-            --team1-color: #FF5E7E;
-            --team1-shadow: #C93E5C;
-            --team1-bg: rgba(255, 234, 234, 0.85);
-            --team2-color: #00D2FF;
-            --team2-shadow: #0099CC;
-            --team2-bg: rgba(232, 248, 245, 0.85);
-            --accent-color: #FFD700;
-            --settings-bg: rgba(240, 243, 244, 0.95);
+            
+            /* Fixed Game Colors */
+            --team1-color: #FF5E7E; --team1-shadow: #C93E5C; --team1-bg: rgba(255, 234, 234, 0.95);
+            --team2-color: #00D2FF; --team2-shadow: #0099CC; --team2-bg: rgba(232, 248, 245, 0.95);
+            --accent-color: #FFD700; --settings-bg: rgba(240, 243, 244, 0.98);
         }
 
+        /* --- Mandatory Smartboard Optimization --- */
         html { font-size: var(--base-font-size); }
-
         body { 
             user-select: none; 
             -webkit-user-select: none; 
@@ -30,300 +27,146 @@
             margin: 0; 
             overflow: hidden; 
             font-family: var(--primary-font);
-            font-weight: var(--font-weight);
+            font-weight: var(--font-weight); 
             color: var(--text-dark);
-            text-align: center;
-            height: 100vh;
-            display: flex;
+            text-align: center; 
+            height: 100vh; 
+            display: flex; 
             flex-direction: column;
-            background-color: #000; /* Fallback */
+            background-color: #000;
         }
 
         /* --- Dynamic Background Layers --- */
         .bg-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; /* Keep it behind everything */
-            display: none; /* Toggled via JS */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; display: none;
         }
-        .bg-layer video, .bg-layer img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-
-        /* Animated CSS Fallback */
+        .bg-layer video, .bg-layer img { width: 100%; height: 100%; object-fit: cover; }
         .css-bg {
             background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
         }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        button, input, select {
-            font-family: var(--primary-font);
-            font-weight: var(--font-weight);
-        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
-        #main-title-display {
-            color: #ffffff;
-            margin: 15px 0;
-            font-size: 3em;
+        button, input, select { font-family: var(--primary-font); font-weight: var(--font-weight); }
+
+        h1.main-title {
+            color: #ffffff; margin: 15px 0; font-size: 3em; letter-spacing: 2px;
             text-shadow: 4px 4px 0 var(--text-dark), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark);
             z-index: 10;
-            letter-spacing: 2px;
         }
 
-        /* --- In-Game Controls --- */
-        #in-game-controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: none;
-            z-index: 100;
-            gap: 15px;
+        /* --- Reusable UI Elements (Large Hit Areas) --- */
+        .btn {
+            background-color: var(--accent-color); color: var(--text-dark);
+            border: 5px solid var(--text-dark); padding: 15px 30px; font-size: 1.8em;
+            border-radius: 40px; cursor: pointer; box-shadow: 0 8px 0 var(--text-dark);
+            transition: transform 0.1s, box-shadow 0.1s; margin: 10px; text-transform: uppercase;
+            min-height: 60px; min-width: 60px;
         }
-
-        .control-btn {
-            background-color: #9B59B6;
-            color: white;
-            border: 4px solid var(--text-dark);
-            padding: 12px 20px;
-            font-size: 1.2em;
-            border-radius: 20px;
-            cursor: pointer;
-            box-shadow: 0 6px 0 var(--text-dark);
-            transition: transform 0.1s, box-shadow 0.1s;
-            min-height: 50px; min-width: 50px;
-        }
-        .control-btn:active {
-            transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark);
-        }
+        .btn:active { transform: translateY(8px); box-shadow: 0 0 0 var(--text-dark); }
+        .btn-small { font-size: 1.2em; padding: 10px 20px; border-width: 3px; box-shadow: 0 5px 0 var(--text-dark); min-height: 44px; min-width: 44px;}
+        .btn-small:active { transform: translateY(5px); box-shadow: 0 0 0 var(--text-dark); }
+        .btn-danger { background-color: #FF4757; color: white; }
+        .btn-success { background-color: #2ED573; color: var(--text-dark); }
+        .btn-info { background-color: #3498DB; color: white; }
 
         /* --- Screens --- */
-        #start-screen, #settings-screen, #win-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
+        .screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
+        .active-screen { display: flex; }
 
-        #start-screen {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
+        #start-screen { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px); }
+        #subtitle-display { font-size: 5em; color: white; text-shadow: 4px 4px 0 var(--text-dark); animation: bounce 2s infinite; margin-bottom: 20px;}
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-30px); } 60% { transform: translateY(-15px); } }
 
-        #subtitle-display {
-            font-size: 5em;
-            margin-bottom: 40px;
-            color: #fff;
-            text-shadow: 4px 4px 0 var(--text-dark);
-            animation: bounce 2s infinite;
+        /* --- Tournament Setup & Status --- */
+        .panel-box {
+            background: var(--settings-bg); border: 6px solid var(--text-dark); border-radius: 30px;
+            padding: 20px; width: 95%; max-width: 1000px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
         }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-30px); }
-            60% { transform: translateY(-15px); }
-        }
+        .scroll-area { overflow-y: auto; flex: 1; padding: 10px; touch-action: auto; user-select: auto; -webkit-user-select: auto;}
+        
+        .team-input-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; justify-content: center;}
+        .team-input-row input { font-size: 1.5em; padding: 10px; border: 3px solid var(--text-dark); border-radius: 10px; text-align: center; width: 60%; min-height: 44px;}
 
-        button.action-btn {
-            background-color: var(--accent-color);
-            color: var(--text-dark);
-            border: 6px solid var(--text-dark);
-            padding: 20px 50px;
-            font-size: 2.5em;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 0 var(--text-dark);
-            transition: all 0.1s;
-            margin: 15px;
-            min-height: 80px; 
-            text-transform: uppercase;
-        }
-        button.action-btn:active { transform: translateY(10px); box-shadow: 0 0 0 var(--text-dark); }
+        #vs-display { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 30px 0; }
+        .vs-team { font-size: 2.5em; padding: 20px 40px; border-radius: 20px; color: white; border: 6px solid var(--text-dark); }
+        .vs-t1 { background: var(--team1-color); box-shadow: 0 10px 0 var(--team1-shadow); }
+        .vs-t2 { background: var(--team2-color); box-shadow: 0 10px 0 var(--team2-shadow); }
+        .vs-text { font-size: 3em; color: var(--text-dark); font-style: italic; }
 
-        button.settings-btn {
-            background-color: #A8DADC;
-            font-size: 1.5em;
-            padding: 15px 30px;
-            border: 4px solid var(--text-dark);
-            box-shadow: 0 6px 0 var(--text-dark);
-        }
-        button.settings-btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark); }
-
-        /* --- Tabbed Dashboard UI --- */
-        #settings-screen {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-        }
-
-        .dashboard-container {
-            background: var(--settings-bg);
-            width: 95%; max-width: 1000px; height: 90vh;
-            border-radius: 30px; border: 6px solid var(--text-dark);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-        .dashboard-header {
-            background: #fff; padding: 20px 20px 0 20px;
-            border-bottom: 4px solid var(--text-dark);
-        }
-        .dashboard-header h2 { margin: 0 0 15px 0; font-size: 2.5em; }
-
-        .tabs { display: flex; gap: 10px; overflow-x: auto; }
-        .tab-btn {
-            flex: 1; padding: 15px 20px; font-size: 1.2em; background: #e9ecef;
-            border: 3px solid var(--text-dark); border-bottom: none;
-            border-radius: 15px 15px 0 0; cursor: pointer;
-            color: var(--text-dark); transition: background 0.2s; white-space: nowrap;
-        }
-        .tab-btn.active { background: var(--accent-color); font-size: 1.3em; }
-
-        .tab-content-area {
-            flex: 1; overflow-y: auto; padding: 25px;
-            background: transparent; touch-action: auto; user-select: auto; -webkit-user-select: auto;
-        }
-        .tab-panel { display: none; }
+        /* --- Dashboard Tabs & Forms --- */
+        .tabs { display: flex; gap: 10px; overflow-x: auto; border-bottom: 4px solid var(--text-dark); padding-bottom: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; font-size: 1.2em; border: 3px solid var(--text-dark); border-radius: 10px; cursor: pointer; background: #fff; white-space: nowrap; min-height: 44px;}
+        .tab-btn.active { background: var(--accent-color); font-size: 1.3em;}
+        .tab-panel { display: none; text-align: left; }
         .tab-panel.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .dashboard-footer {
-            background: #fff; padding: 15px; border-top: 4px solid var(--text-dark);
-            display: flex; justify-content: center; gap: 20px;
-        }
-
-        /* Settings Inputs */
-        .settings-row {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; background: #fff; padding: 15px;
-            border-radius: 15px; border: 3px solid #dee2e6; text-align: left; gap: 15px;
-        }
-        .settings-row label { font-size: 1.2em; color: var(--text-dark); flex-shrink: 0; width: 35%; }
-        .settings-row input[type="text"], .settings-row input[type="number"], .settings-row select {
-            padding: 12px; border: 3px solid #ccc; border-radius: 10px;
-            font-size: 1.2em; min-height: 50px; box-sizing: border-box; color: var(--text-dark); flex-grow: 1; width: 100%;
-        }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 15px; background: #fff; padding: 15px; border-radius: 15px; border: 3px solid #dee2e6; }
+        .settings-row label { font-size: 1.2em; flex-shrink: 0; width: 35%; }
+        .settings-row input[type="text"], .settings-row input[type="number"], .settings-row select { padding: 12px; border: 3px solid #ccc; border-radius: 10px; font-size: 1.2em; flex-grow: 1; width: 100%; box-sizing: border-box; min-height: 44px;}
         .settings-row input[type="color"] { height: 50px; width: 100px; cursor: pointer; border: 3px solid #ccc; border-radius: 10px; }
 
-        .question-edit-card {
-            background: #fff; padding: 15px; border-radius: 15px;
-            border: 3px solid #dee2e6; margin-bottom: 15px; text-align: left;
-        }
-        .img-preview-box img, .img-preview-box video {
-            width: 80px; height: 80px; object-fit: cover; 
-            border-radius: 12px; border: 3px solid var(--text-dark);
-            background: #fff; flex-shrink: 0;
-        }
+        .q-card { background: #fff; padding: 15px; border: 3px solid #dee2e6; border-radius: 15px; margin-bottom: 15px; text-align: left; }
+        .img-preview-box { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 3px solid var(--text-dark); background: #eee; flex-shrink: 0; display:flex; align-items:center; justify-content:center; overflow: hidden;}
+        .img-preview-box img, .img-preview-box video { width: 100%; height: 100%; object-fit: cover; }
 
-        .delete-btn { background: #E63946; color: white; border: 3px solid var(--text-dark); padding: 10px; border-radius: 12px; cursor: pointer; font-size: 1.5em; width: 60px; min-height: 50px; box-shadow: 0 4px 0 var(--text-dark);}
-        .delete-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--text-dark); }
-
-        .add-btn { background: #2ED573; color: var(--text-dark); border: 4px solid var(--text-dark); padding: 15px 20px; border-radius: 15px; cursor: pointer; font-size: 1.5em; width: 100%; margin-top: 10px; box-shadow: 0 6px 0 var(--text-dark);}
-        .add-btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark); }
-
-        /* --- Main Layout & Glassmorphism --- */
-        #main-layout {
-            display: none; width: 100%; flex: 1; justify-content: space-evenly;
-            align-items: center; padding: 15px; box-sizing: border-box; gap: 20px;
-            /* Added slight background to ensure visibility if game background is too bright */
-            background: rgba(0,0,0,0.2); 
-        }
-
+        /* --- Game Arena --- */
+        #game-layout { display: flex; width: 100%; flex: 1; justify-content: space-evenly; align-items: center; padding: 15px; box-sizing: border-box; gap: 15px; background: rgba(0,0,0,0.15); }
         .team-column {
-            width: 25%; display: flex; flex-direction: column; align-items: center;
-            padding: 25px 15px; border-radius: 30px; border: 6px solid var(--text-dark);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            width: 28%; display: flex; flex-direction: column; align-items: center; padding: 20px 10px;
+            border-radius: 30px; border: 6px solid var(--text-dark); position: relative;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
         #team1 { background: var(--team1-bg); }
         #team2 { background: var(--team2-bg); }
 
-        .team-title { font-size: 3em; margin: 0 0 15px 0; color: #fff; text-transform: uppercase; }
-        #team1 .team-title { text-shadow: 3px 3px 0 var(--team1-shadow), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark), 2px 2px 0 var(--text-dark); }
-        #team2 .team-title { text-shadow: 3px 3px 0 var(--team2-shadow), -2px -2px 0 var(--text-dark), 2px -2px 0 var(--text-dark), -2px 2px 0 var(--text-dark), 2px 2px 0 var(--text-dark); }
-
-        .question {
-            background: var(--text-dark); color: #fff; padding: 8px 20px;
-            border-radius: 20px; font-size: 1.4em; margin-bottom: 15px;
-            border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.3);
-            text-align: center; width: 80%; min-height: 40px; display: flex;
-            align-items: center; justify-content: center;
-        }
-
-        .photo-display {
-            width: 180px; height: 180px; margin: 10px 0 25px 0;
-            background-color: #fff; border: 8px solid var(--text-dark); 
-            border-radius: 25px; box-shadow: 0 10px 0 rgba(0,0,0,0.2);
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden; position: relative; animation: float 4s ease-in-out infinite;
-        }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .team-title { font-size: 2.5em; margin: 0 0 10px 0; color: white; text-transform: uppercase; -webkit-text-stroke: 1.5px var(--text-dark); }
+        .question-box { background: var(--text-dark); color: #fff; padding: 10px 20px; border-radius: 15px; font-size: 1.3em; margin-bottom: 10px; width: 80%; min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center; border: 3px solid white;}
+        
+        .photo-display { width: 160px; height: 160px; background: white; border: 6px solid var(--text-dark); border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; overflow: hidden; animation: float 3s ease-in-out infinite; box-shadow: 0 10px 0 rgba(0,0,0,0.2);}
         .photo-display img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
         .card {
-            background-color: #fff; border: 5px solid var(--text-dark); border-radius: 20px;
-            padding: 15px 10px; font-size: 1.5em; cursor: pointer; box-shadow: 0 8px 0 var(--text-dark);
-            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s; 
-            display: flex; justify-content: center; align-items: center;
-            min-height: 60px; user-select: none; -webkit-user-select: none; 
-            text-align: center; color: var(--text-dark);
+            background: white; border: 4px solid var(--text-dark); border-radius: 15px; padding: 10px; font-size: 1.3em; 
+            cursor: pointer; box-shadow: 0 6px 0 var(--text-dark); transition: all 0.1s; min-height: 60px; display: flex; align-items: center; justify-content: center; color: var(--text-dark);
         }
-        .card:active, .card.pressed { transform: translateY(8px); box-shadow: 0 0 0 var(--text-dark) !important; }
-        .card.correct { background-color: #2ED573; color: white; border-color: #fff; box-shadow: 0 8px 0 #1E9E53; }
-        .card.correct::after { content: '⭐'; position: absolute; font-size: 2.5em; animation: pop 0.3s ease-out forwards; }
-        .card.wrong { background-color: #FF4757; color: white; border-color: #fff; box-shadow: 0 8px 0 #C93E5C; }
-        .card.wrong::after { content: '✖️'; position: absolute; font-size: 2.5em; animation: pop 0.3s ease-out forwards; }
-        .card.disabled { opacity: 0.6; pointer-events: none; filter: grayscale(50%); }
+        .card:active, .card.pressed { transform: translateY(6px); box-shadow: 0 0 0 var(--text-dark) !important; }
+        .card.correct { background: #2ED573; color: white; border-color: white; box-shadow: 0 6px 0 #1E9E53;}
+        .card.correct::after { content: '⭐'; position: absolute; font-size: 2em; animation: pop 0.3s ease-out forwards; }
+        .card.wrong { background: #FF4757; color: white; border-color: white; box-shadow: 0 6px 0 #C93E5C;}
+        .card.wrong::after { content: '✖️'; position: absolute; font-size: 2em; animation: pop 0.3s ease-out forwards; }
+        .card.disabled { opacity: 0.6; pointer-events: none; }
 
-        /* --- Center Arena --- */
         #arena-container {
-            width: 42%; max-width: 700px; aspect-ratio: 16 / 10; position: relative;
-            background: #ffffff; /* Clean White */
-            border: 4px solid var(--text-dark); border-radius: 40px;
-            box-shadow: none; /* No shadow */
-            overflow: hidden; display: flex; align-items: center;
+            width: 40%; max-width: 600px; aspect-ratio: 16/10; position: relative; background: #ffffff;
+            border: 4px solid var(--text-dark); border-radius: 30px; overflow: hidden; display: flex; align-items: center;
         }
-
-        .vertical-line { position: absolute; top: 0; bottom: 0; width: 0; z-index: 10; pointer-events: none;}
+        .vertical-line { position: absolute; top: 0; bottom: 0; width: 0; z-index: 10; pointer-events: none; }
         #win-line-left { left: 25%; border-left: 4px dashed var(--team1-color); transform: translateX(-50%); opacity: 0.6; }
-        #center-line { left: 50%; border-left: 3px dashed #000000; transform: translateX(-50%); opacity: 0.4; }
+        #center-line { left: 50%; border-left: 3px dashed #000; transform: translateX(-50%); opacity: 0.3; }
         #win-line-right { left: 75%; border-left: 4px dashed var(--team2-color); transform: translateX(-50%); opacity: 0.6; }
 
         #tug-group {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            z-index: 5; transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            height: 60%; display: flex; justify-content: center; align-items: center;
-            width: 250%; animation: idleBob 2s ease-in-out infinite;
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5;
+            transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); height: 60%; width: 250%; 
+            display: flex; justify-content: center; align-items: center; animation: idleBob 2s infinite;
         }
-        #tug-group img { height: 100%; width: auto; display: block; pointer-events: none; filter: none; }
-
-        /* --- Win Screen --- */
-        #win-overlay { display: none; background: rgba(44, 62, 80, 0.9); backdrop-filter: blur(10px); }
-        #win-text-display { font-size: 7em; color: #fff; margin-bottom: 30px; text-shadow: 6px 6px 0 var(--text-dark); animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; text-transform: uppercase; }
-
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px) rotate(-2deg); } 75% { transform: translateX(15px) rotate(2deg); } }
-        .shake { animation: shake 0.4s ease-in-out; }
-        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-        .burst { position: absolute; top: 50%; width: 150px; height: 150px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
-
-        .data-btn {
-            background-color: #3498DB; color: white; border: 4px solid var(--text-dark);
-            padding: 12px 25px; font-size: 1.2em; border-radius: 15px; cursor: pointer;
-            margin: 5px; min-height: 50px; box-shadow: 0 5px 0 var(--text-dark);
-        }
-        .data-btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--text-dark); }
+        #tug-group img { height: 100%; width: auto; pointer-events: none; }
         
-        .upload-warning {
-            font-size: 0.9em; color: #E63946; margin: 5px 0 0 0; text-align: left;
-        }
+        .burst { position: absolute; top: 50%; width: 150px; height: 150px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 20; display: none; }
+        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 
+        #top-bar { position: absolute; top: 10px; left: 10px; z-index: 200; display: flex; gap: 10px; }
+        
+        .upload-warning { font-size: 0.8em; color: #E63946; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -332,120 +175,178 @@
     <div id="home-bg-layer" class="bg-layer css-bg"></div>
     <div id="game-bg-layer" class="bg-layer css-bg"></div>
 
-    <div id="in-game-controls">
-        <button class="control-btn" onclick="showStartScreen()">🏠 Menu</button>
-        <button class="control-btn" style="background-color: #E63946;" onclick="restartMatch()">🔄 Restart</button>
+    <div id="top-bar">
+        <button class="btn btn-small btn-info" onclick="goHome()">🏠 Menu</button>
+        <button class="btn btn-small btn-danger" onclick="abortTournament()" id="abort-btn" style="display:none;">🛑 End Tourney</button>
     </div>
 
-    <h1 id="main-title-display">Sanxing Elementary Tug-of-War</h1>
-    
-    <div id="start-screen">
-        <h1 id="subtitle-display">EPIC TUG-OF-WAR</h1>
-        <button class="action-btn" onclick="startGame()">▶️ PLAY NOW</button>
-        <button class="action-btn settings-btn" onclick="openSettings()">⚙️ Dashboard</button>
+    <!-- 1. Start Screen -->
+    <div id="start-screen" class="screen active-screen">
+        <h1 class="main-title" id="main-title-display">Sanxing Elementary Tug-of-War</h1>
+        <h2 id="subtitle-display">EPIC TOURNAMENT</h2>
+        <button class="btn" onclick="openSetup()">🏆 Start Tournament</button>
+        <button class="btn btn-small" style="background:#A8DADC;" onclick="openDashboard()">⚙️ Teacher Cris's Dashboard</button>
     </div>
 
-    <div id="settings-screen">
-        <div class="dashboard-container">
-            <div class="dashboard-header">
-                <h2>⚙️ Dashboard</h2>
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('tab-questions')">❓ Questions</button>
-                    <button class="tab-btn" onclick="switchTab('tab-texts')">✏️ Custom Texts</button>
-                    <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & Backgrounds</button>
-                    <button class="tab-btn" onclick="switchTab('tab-data')">💾 Save / Load</button>
-                </div>
+    <!-- 2. Tournament Setup Screen -->
+    <div id="setup-screen" class="screen" style="background: rgba(0,0,0,0.8);">
+        <div class="panel-box" style="align-items: center;">
+            <h2 style="font-size: 2.5em; margin-top:0;">Tournament Setup</h2>
+            <div style="font-size: 1.5em; margin-bottom: 20px;">
+                How many teams are playing? 
+                <input type="number" id="team-count" value="4" min="2" max="16" style="font-size: 1em; width: 80px; text-align: center; border-radius: 10px; border: 3px solid var(--text-dark);">
+                <button class="btn btn-small btn-success" onclick="generateTeamInputs()">Set</button>
+            </div>
+            <div id="team-inputs-container" class="scroll-area" style="width:100%; max-height: 40vh; margin-bottom: 20px;"></div>
+            <button class="btn" onclick="beginTournament()">Let's Go!</button>
+        </div>
+    </div>
+
+    <!-- 3. Tournament Bracket / Status Screen -->
+    <div id="status-screen" class="screen" style="background: rgba(0,0,0,0.85);">
+        <div class="panel-box" style="text-align: center; align-items: center; justify-content: center;">
+            <h2 id="round-title" style="font-size: 3em; margin-top:0;">Round 1</h2>
+            <p id="round-info" style="font-size: 1.5em; color: #555;">Teams remaining: X</p>
+            
+            <div id="vs-display">
+                <div class="vs-team vs-t1" id="vs-teamA">Team A</div>
+                <div class="vs-text">VS</div>
+                <div class="vs-team vs-t2" id="vs-teamB">Team B</div>
+            </div>
+            
+            <p id="bye-message" style="font-size: 1.5em; color: #2ED573; font-weight: bold; display: none;">🌟 Team gets a Bye! 🌟</p>
+            
+            <button class="btn" id="start-match-btn" onclick="startMatch()">Start Match!</button>
+        </div>
+    </div>
+
+    <!-- 4. Game Screen (Tug of War) -->
+    <div id="game-screen" class="screen">
+        <h1 class="main-title" id="game-title-display">Sanxing Elementary Tug-of-War</h1>
+        <div id="game-layout">
+            <div id="team1" class="team-column">
+                <h2 class="team-title" id="t1-name">Team 1</h2>
+                <div class="question-box" id="t1-q">What is this?</div>
+                <div class="photo-display" id="t1-photo"></div>
+                <div class="cards" id="t1-cards"></div>
             </div>
 
-            <div class="tab-content-area">
+            <div id="arena-container">
+                <div id="win-line-left" class="vertical-line"></div>
+                <div id="center-line" class="vertical-line"></div>
+                <div id="win-line-right" class="vertical-line"></div>
+                <div id="tug-group"><img id="arena-img" src="" alt="Pulling..."></div>
+                <div id="burst-left" class="burst"></div>
+                <div id="burst-right" class="burst"></div>
+            </div>
+
+            <div id="team2" class="team-column">
+                <h2 class="team-title" id="t2-name">Team 2</h2>
+                <div class="question-box" id="t2-q">What is this?</div>
+                <div class="photo-display" id="t2-photo"></div>
+                <div class="cards" id="t2-cards"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Win / Champion Overlays -->
+    <div id="match-win-screen" class="screen" style="background: rgba(0,0,0,0.85);">
+        <h1 style="font-size: 6em; color: var(--accent-color); text-shadow: 4px 4px 0 #000;" id="match-winner-text">Team Wins!</h1>
+        <p style="font-size: 2em; color: white;">Advances to the next round!</p>
+        <button class="btn" onclick="nextTournamentStep()">Continue Tournament</button>
+    </div>
+
+    <div id="champion-screen" class="screen" style="background: rgba(255, 215, 0, 0.95);">
+        <h1 style="font-size: 6em; color: white; text-shadow: 4px 4px 0 var(--text-dark);" id="champion-text">🏆 CHAMPION! 🏆</h1>
+        <p style="font-size: 4em; color: var(--text-dark);" id="champion-name">Team Name</p>
+        <button class="btn btn-danger" onclick="goHome()">End Tournament</button>
+    </div>
+
+    <!-- 6. Ultimate Teacher Dashboard -->
+    <div id="dashboard-screen" class="screen" style="background: rgba(0,0,0,0.7);">
+        <div class="panel-box">
+            <h2 style="margin-top:0; border-bottom: 3px solid #ccc; padding-bottom: 10px;">⚙️ Master Dashboard</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-q')">❓ Questions</button>
+                <button class="tab-btn" onclick="switchTab('tab-txt')">✏️ Texts</button>
+                <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & BGs</button>
+                <button class="tab-btn" onclick="switchTab('tab-data')">💾 Save / Load</button>
+            </div>
+            
+            <div class="scroll-area">
                 <!-- TAB 1: QUESTIONS -->
-                <div id="tab-questions" class="tab-panel active">
+                <div id="tab-q" class="tab-panel active">
                     <div class="settings-row" style="background: #fff3cd; border-color: #ffc107;">
-                        <label>🎯 Target Points to Win:</label>
-                        <input type="number" id="win-score-input" value="5" min="1" max="100" style="max-width: 150px;">
+                        <label>🎯 Points to Win Match:</label>
+                        <input type="number" id="dash-score" value="5" min="1" max="100" style="max-width: 150px;">
                     </div>
-                    <div id="settings-questions-list"></div>
-                    <button class="add-btn" onclick="addNewQuestion()">➕ Add New Question</button>
+                    <div id="q-list"></div>
+                    <button class="btn btn-small btn-success" style="width:100%;" onclick="addQ()">➕ Add Multiple-Choice Question</button>
                 </div>
 
-                <!-- TAB 2: CUSTOM TEXTS -->
-                <div id="tab-texts" class="tab-panel">
+                <!-- TAB 2: TEXTS -->
+                <div id="tab-txt" class="tab-panel">
                     <div class="settings-row">
                         <label>Main Title (Top):</label>
-                        <input type="text" id="text-maintitle" value="Sanxing Elementary Tug-of-War">
+                        <input type="text" id="dash-maintitle" value="Sanxing Elementary Tug-of-War">
                     </div>
                     <div class="settings-row">
                         <label>Start Screen Subtitle:</label>
-                        <input type="text" id="text-subtitle" value="EPIC TUG-OF-WAR">
+                        <input type="text" id="dash-subtitle" value="EPIC TOURNAMENT">
                     </div>
-                    <div class="settings-row">
-                        <label>Team 1 Name:</label>
-                        <input type="text" id="text-team1" value="Team 1">
-                    </div>
-                    <div class="settings-row">
-                        <label>Team 2 Name:</label>
-                        <input type="text" id="text-team2" value="Team 2">
-                    </div>
+                    <p style="color:#666; font-size:1.1em;">* Note: Team names are entered when starting the tournament.</p>
                 </div>
 
                 <!-- TAB 3: STYLE & BACKGROUNDS -->
                 <div id="tab-style" class="tab-panel">
-                    <!-- Typography -->
-                    <h3 style="text-align: left; margin-top: 0;">Typography</h3>
+                    <h3 style="margin-top:0;">Typography</h3>
                     <div class="settings-row">
-                        <label>Font Style (Family):</label>
-                        <select id="typo-family">
-                            <option value="'Century Gothic', 'AppleGothic', system-ui, sans-serif">Century Gothic (Default)</option>
-                            <option value="'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif">Comic Sans / Chalkboard</option>
-                            <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
-                            <option value="'Courier New', Courier, monospace">Courier New</option>
-                            <option value="Impact, fantasy">Impact</option>
+                        <label>Font Style:</label>
+                        <select id="dash-font-family">
+                            <option value="'Century Gothic', 'AppleGothic', system-ui, sans-serif">Century Gothic</option>
+                            <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Courier New', monospace">Courier New</option>
                         </select>
                     </div>
                     <div class="settings-row">
                         <label>Base Font Size (px):</label>
-                        <input type="number" id="typo-size" min="12" max="32" value="16">
+                        <input type="number" id="dash-font-size" min="12" max="32" value="16">
                     </div>
                     <div class="settings-row">
                         <label>Text & Border Color:</label>
-                        <input type="color" id="typo-color" value="#2C3E50">
+                        <input type="color" id="dash-font-color" value="#2C3E50">
                     </div>
 
-                    <h3 style="text-align: left; margin-top: 30px;">Backgrounds & Arena</h3>
-                    
-                    <!-- Center Arena Image -->
+                    <h3 style="margin-top:20px;">Media & Backgrounds</h3>
                     <div class="settings-row">
                         <label>Center Arena Image:</label>
-                        <div class="img-preview-box" style="display: flex; gap: 15px; align-items: center; width: 100%;">
-                            <img id="arena-preview" src="" alt="Arena" style="width: 120px; height: 80px; object-fit: contain;">
-                            <input type="file" accept="image/*" onchange="handleArenaImageUpload(event)">
+                        <div style="display:flex; gap:10px; width:100%; align-items:center;">
+                            <div class="img-preview-box" id="arena-preview-box" style="background: white;"></div>
+                            <input type="file" accept="image/*" onchange="handleArenaUpload(event)" style="min-height: 44px; padding: 10px;">
                         </div>
                     </div>
-
-                    <!-- Homepage Background -->
-                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
-                        <label style="width: 100%; margin-bottom: 5px;">Homepage Background (Image or Video URL):</label>
-                        <div style="display: flex; width: 100%; gap: 15px; align-items: center;">
-                            <div class="img-preview-box" id="home-bg-preview-container" style="width: 80px; height: 80px;"></div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
-                                <input type="text" id="home-bg-url" placeholder="Enter URL (e.g., tug.mp4 or https://...)">
-                                <span style="font-size: 0.9em; color: #666;">* Using a URL is best for videos to avoid memory limits.</span>
-                                <input type="file" accept="image/*,video/*" onchange="handleBackgroundUpload(event, 'home')">
-                                <div class="upload-warning" id="home-bg-warning"></div>
+                    
+                    <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>Homepage Background (Image/Video):</label>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <div class="img-preview-box" id="home-bg-preview"></div>
+                            <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="dash-home-url" placeholder="URL (e.g. tug.mp4)">
+                                <input type="file" accept="image/*,video/*" onchange="handleBgUpload(event, 'home')" style="min-height: 44px; padding: 10px;">
+                                <div class="upload-warning" id="home-bg-warn"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Game Background -->
-                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
-                        <label style="width: 100%; margin-bottom: 5px;">In-Game Background (Image or Video URL):</label>
-                        <div style="display: flex; width: 100%; gap: 15px; align-items: center;">
-                            <div class="img-preview-box" id="game-bg-preview-container" style="width: 80px; height: 80px;"></div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
-                                <input type="text" id="game-bg-url" placeholder="Leave blank for animated colors, or enter URL">
-                                <span style="font-size: 0.9em; color: #666;">* Leave blank to use default colorful gradient.</span>
-                                <input type="file" accept="image/*,video/*" onchange="handleBackgroundUpload(event, 'game')">
-                                <div class="upload-warning" id="game-bg-warning"></div>
+                    <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>In-Game Background (Image/Video):</label>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <div class="img-preview-box" id="game-bg-preview"></div>
+                            <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="dash-game-url" placeholder="URL or leave blank for default">
+                                <input type="file" accept="image/*,video/*" onchange="handleBgUpload(event, 'game')" style="min-height: 44px; padding: 10px;">
+                                <div class="upload-warning" id="game-bg-warn"></div>
                             </div>
                         </div>
                     </div>
@@ -453,551 +354,454 @@
 
                 <!-- TAB 4: DATA -->
                 <div id="tab-data" class="tab-panel">
-                    <div class="settings-row" style="flex-direction: column; align-items: center; text-align: center; gap: 20px;">
-                        <h3 style="margin:0; font-size: 1.8em;">💾 Export & Import</h3>
-                        <p style="margin:0; font-size: 1.2em; color: #555;">Save your custom texts, multiple-choice questions, and styles to a file.</p>
-                        <div>
-                            <button class="data-btn" onclick="exportData()">⬇️ Export Current Setup (.json)</button>
-                            <button class="data-btn" onclick="document.getElementById('import-file').click()">⬆️ Import Setup (.json)</button>
+                    <div class="settings-row" style="flex-direction:column; text-align:center;">
+                        <h3>💾 Export & Import</h3>
+                        <p>Save your entire setup (questions, texts, backgrounds, styles) to a file.</p>
+                        <div style="display:flex; gap:15px; justify-content:center;">
+                            <button class="btn btn-small btn-info" onclick="exportData()">⬇️ Export (.json)</button>
+                            <button class="btn btn-small btn-success" onclick="document.getElementById('import-file').click()">⬆️ Import (.json)</button>
                             <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
                         </div>
-                        <hr style="width: 100%; border: 1px solid #ccc; margin: 20px 0;">
-                        <button class="data-btn" style="background:#E63946;" onclick="resetToDefaults()">⚠️ Reset Everything to Defaults</button>
+                        <hr style="width:100%; border:1px solid #ccc; margin:20px 0;">
+                        <button class="btn btn-small btn-danger" onclick="resetDefaults()">⚠️ Factory Reset</button>
                     </div>
                 </div>
             </div>
 
-            <div class="dashboard-footer">
-                <button class="action-btn" style="margin:0; padding: 10px 40px; font-size: 1.8em;" onclick="saveSettingsAndClose()">💾 Save & Close</button>
-                <button class="action-btn" style="margin:0; background:#95a5a6; padding: 10px 40px; font-size: 1.8em;" onclick="cancelSettings()">❌ Cancel</button>
+            <div style="display:flex; justify-content:center; margin-top:15px; border-top:3px solid #ccc; padding-top:15px;">
+                <button class="btn btn-small btn-info" onclick="saveDashboard()">💾 Save & Apply</button>
+                <button class="btn btn-small btn-danger" onclick="goHome()">❌ Cancel</button>
             </div>
         </div>
-    </div>
-
-    <div id="main-layout">
-        <div id="team1" class="team-column">
-            <h2 class="team-title" id="t1-name-display">Team 1</h2>
-            <div class="question" id="t1-question-display">What is this?</div>
-            <div class="photo-display" id="t1-photo"></div>
-            <div class="cards" id="t1-cards"></div>
-        </div>
-
-        <div id="arena-container">
-            <div id="win-line-left" class="vertical-line"></div>
-            <div id="center-line" class="vertical-line"></div>
-            <div id="win-line-right" class="vertical-line"></div>
-            
-            <div id="tug-group">
-                <img id="arena-main-img" src="" alt="Pulling...">
-            </div>
-            
-            <div id="burst-left" style="left: 25%; display:none;" class="burst"></div>
-            <div id="burst-right" style="left: 75%; display:none;" class="burst"></div>
-        </div>
-
-        <div id="team2" class="team-column">
-            <h2 class="team-title" id="t2-name-display">Team 2</h2>
-            <div class="question" id="t2-question-display">What is this?</div>
-            <div class="photo-display" id="t2-photo"></div>
-            <div class="cards" id="t2-cards"></div>
-        </div>
-    </div>
-
-    <div id="win-overlay">
-        <div id="win-text-display">Team Wins!</div>
-        <button class="action-btn" onclick="showStartScreen()">🔙 Back to Menu</button>
     </div>
 
     <script>
-        // --- DATA STRUCTURES & DEFAULTS ---
-        const DEFAULT_WIN_SCORE = 5;
-        const DEFAULT_ARENA_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
-        
-        const DEFAULT_TYPO = { family: "'Century Gothic', 'AppleGothic', system-ui, sans-serif", size: 16, color: "#2C3E50", weight: "bold" };
-        const DEFAULT_TEXTS = { mainTitle: "Sanxing Elementary Tug-of-War", subtitle: "EPIC TUG-OF-WAR", team1Name: "Team 1", team2Name: "Team 2" };
+        /* =========================================================================
+           1. DATA STRUCTURES & INIT
+           ========================================================================= */
+        const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%232C3E50'/><text x='50' y='55' font-size='20' text-anchor='middle' fill='white'>IMG</text></svg>";
+        const DEFAULT_ARENA_IMG = "tug.png"; 
 
-        const DEFAULT_BGS = {
-            home: { type: "video", url: "tug.mp4" }, // Default from repo
-            game: { type: "css", url: "" }           // Empty string falls back to CSS gradient
+        const DEFAULT_DATA = {
+            winScore: 5,
+            typo: { family: "'Century Gothic', 'AppleGothic', system-ui, sans-serif", size: 16, color: "#2C3E50", weight: "bold" },
+            texts: { main: "Sanxing Elementary Tug-of-War", sub: "EPIC TOURNAMENT" },
+            bgs: { 
+                home: { type: "video", url: "tug.mp4" }, 
+                game: { type: "css", url: "" } 
+            },
+            arena: DEFAULT_ARENA_IMG,
+            questions: [
+                { q: "What animal is this?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/120px-Cat03.jpg", c: "Cat", w: ["Dog", "Mouse", "Rabbit"] },
+                { q: "Identify this animal:", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Collage_of_Nine_Dogs.jpg/120px-Collage_of_Nine_Dogs.jpg", c: "Dog", w: ["Wolf", "Fox", "Bear"] },
+                { q: "What fruit is red?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/120px-Red_Apple.jpg", c: "Apple", w: ["Banana", "Grape", "Orange"] },
+                { q: "What fruit is yellow?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/120px-Banana-Single.jpg", c: "Banana", w: ["Apple", "Cherry", "Plum"] }
+            ]
         };
 
-        const DEFAULT_QUESTIONS = [
-            { question: "What animal is this?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg", correct: "Cat", distractors: ["Dog", "Mouse", "Rabbit"] },
-            { question: "Identify this animal:", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Collage_of_Nine_Dogs.jpg/1200px-Collage_of_Nine_Dogs.jpg", correct: "Dog", distractors: ["Wolf", "Fox", "Bear"] },
-            { question: "What fruit is red?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/1200px-Red_Apple.jpg", correct: "Apple", distractors: ["Banana", "Grape", "Orange"] },
-            { question: "What fruit is yellow?", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/1200px-Banana-Single.jpg", correct: "Banana", distractors: ["Apple", "Cherry", "Plum"] }
-        ];
+        let gData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-        let questionList = [];
-        let winScore = DEFAULT_WIN_SCORE;
-        let arenaImgData = DEFAULT_ARENA_IMG;
-        let typoSettings = {...DEFAULT_TYPO};
-        let customTexts = {...DEFAULT_TEXTS};
-        let backgrounds = JSON.parse(JSON.stringify(DEFAULT_BGS));
-
-        // --- CORE FUNCTIONS ---
-        function applyStylingAndTexts() {
-            document.documentElement.style.setProperty('--primary-font', typoSettings.family);
-            document.documentElement.style.setProperty('--base-font-size', typoSettings.size + 'px');
-            document.documentElement.style.setProperty('--text-dark', typoSettings.color);
-            document.documentElement.style.setProperty('--font-weight', typoSettings.weight);
-
-            document.getElementById('main-title-display').innerText = customTexts.mainTitle;
-            document.getElementById('subtitle-display').innerText = customTexts.subtitle;
-            document.getElementById('t1-name-display').innerText = customTexts.team1Name;
-            document.getElementById('t2-name-display').innerText = customTexts.team2Name;
-
-            renderBackgroundLayer('home-bg-layer', backgrounds.home);
-            renderBackgroundLayer('game-bg-layer', backgrounds.game);
+        function loadData() {
+            const saved = localStorage.getItem('tow_master_data_v2');
+            if(saved) {
+                try { gData = JSON.parse(saved); } catch(e) { console.error(e); }
+            }
+            applySettings();
         }
 
-        function renderBackgroundLayer(layerId, bgObj) {
+        function saveData() {
+            localStorage.setItem('tow_master_data_v2', JSON.stringify(gData));
+            applySettings();
+        }
+
+        function applySettings() {
+            // Typo
+            document.documentElement.style.setProperty('--primary-font', gData.typo.family);
+            document.documentElement.style.setProperty('--base-font-size', gData.typo.size + 'px');
+            document.documentElement.style.setProperty('--text-dark', gData.typo.color);
+            document.documentElement.style.setProperty('--font-weight', gData.typo.weight);
+
+            // Texts
+            document.getElementById('main-title-display').innerText = gData.texts.main;
+            document.getElementById('game-title-display').innerText = gData.texts.main;
+            document.getElementById('subtitle-display').innerText = gData.texts.sub;
+
+            // Backgrounds
+            renderBg('home-bg-layer', gData.bgs.home);
+            renderBg('game-bg-layer', gData.bgs.game);
+
+            // Arena
+            document.getElementById('arena-img').src = gData.arena;
+            // Fallback if the user's tug.png isn't found
+            document.getElementById('arena-img').onerror = function() {
+                this.onerror = null; 
+                this.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='60'><rect width='200' height='20' y='20' fill='%23A0522D'/><circle cx='30' cy='30' r='20' fill='%23FF5E7E'/><circle cx='170' cy='30' r='20' fill='%2300D2FF'/></svg>";
+            };
+        }
+
+        function renderBg(layerId, bgObj) {
             const layer = document.getElementById(layerId);
-            layer.innerHTML = '';
-            layer.className = 'bg-layer';
-
-            if (!bgObj.url || bgObj.url.trim() === '') {
-                layer.classList.add('css-bg');
-                return;
-            }
-
+            layer.innerHTML = ''; layer.className = 'bg-layer';
+            if (!bgObj.url || bgObj.url.trim() === '') { layer.classList.add('css-bg'); return; }
             if (bgObj.type === 'video' || bgObj.url.match(/\.(mp4|webm|ogg)$/i)) {
                 layer.innerHTML = `<video autoplay loop muted playsinline><source src="${bgObj.url}"></video>`;
             } else {
-                layer.innerHTML = `<img src="${bgObj.url}" alt="bg">`;
+                layer.innerHTML = `<img src="${bgObj.url}">`;
             }
         }
 
         function buildPreview(containerId, bgObj) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            if(!bgObj.url || bgObj.url.trim() === '') {
-                container.innerHTML = `<div style="width:100%; height:100%; background:#ddd; display:flex; align-items:center; justify-content:center; font-size:0.8em; color:#666;">Default</div>`;
-                return;
-            }
+            const c = document.getElementById(containerId); c.innerHTML = '';
+            if(!bgObj.url) { c.innerHTML = `<span style="font-size:0.8em;color:#666;">Default</span>`; return; }
             if (bgObj.type === 'video' || bgObj.url.match(/\.(mp4|webm|ogg)$/i)) {
-                container.innerHTML = `<video autoplay loop muted style="width:100%; height:100%; object-fit:cover; border-radius:12px;"><source src="${bgObj.url}"></video>`;
+                c.innerHTML = `<video autoplay loop muted style="width:100%;height:100%;object-fit:cover;border-radius:8px;"><source src="${bgObj.url}"></video>`;
             } else {
-                container.innerHTML = `<img src="${bgObj.url}" alt="bg" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+                c.innerHTML = `<img src="${bgObj.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.src='${FALLBACK_IMG}'">`;
             }
         }
 
-        function loadSavedData() {
+        loadData();
+
+        /* =========================================================================
+           2. AUDIO SYSTEM (Web Audio API)
+           ========================================================================= */
+        let audioCtx;
+        function playSnd(type) {
             try {
-                const svQ = localStorage.getItem('tow_mcq_data');
-                const svScore = localStorage.getItem('tow_score_v4');
-                const svArena = localStorage.getItem('tow_arena_v4');
-                const svTypo = localStorage.getItem('tow_typo_v4');
-                const svTexts = localStorage.getItem('tow_texts_v4');
-                const svBgs = localStorage.getItem('tow_bgs_v4');
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const t = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
                 
-                questionList = svQ ? JSON.parse(svQ) : JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)); 
-                winScore = svScore ? parseInt(svScore) : DEFAULT_WIN_SCORE;
-                arenaImgData = svArena ? svArena : DEFAULT_ARENA_IMG;
-                typoSettings = svTypo ? JSON.parse(svTypo) : {...DEFAULT_TYPO};
-                customTexts = svTexts ? JSON.parse(svTexts) : {...DEFAULT_TEXTS};
-                backgrounds = svBgs ? JSON.parse(svBgs) : JSON.parse(JSON.stringify(DEFAULT_BGS));
+                if(type === 'ok') {
+                    o.type = 'sine'; o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(1200, t+0.1);
+                    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.2); o.start(t); o.stop(t+0.2);
+                } else if(type === 'no') {
+                    o.type = 'sawtooth'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(100, t+0.2);
+                    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.3); o.start(t); o.stop(t+0.3);
+                } else if(type === 'pull') {
+                    o.type = 'square'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(50, t+0.1);
+                    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.2); o.start(t); o.stop(t+0.2);
+                } else if(type === 'win' || type === 'champ') {
+                    const notes = type === 'champ' ? [440, 554, 659, 880, 1108, 1318, 1760] : [523, 659, 783, 1046];
+                    notes.forEach((f, i) => {
+                        const o2 = audioCtx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f;
+                        const g2 = audioCtx.createGain(); o2.connect(g2); g2.connect(audioCtx.destination);
+                        g2.gain.setValueAtTime(0, t + i*0.1); g2.gain.linearRampToValueAtTime(0.3, t + i*0.1 + 0.05);
+                        g2.gain.linearRampToValueAtTime(0, t + i*0.1 + 0.5); o2.start(t + i*0.1); o2.stop(t + i*0.1 + 0.5);
+                    });
+                }
+            } catch(e){}
+        }
 
-                applyStylingAndTexts();
-            } catch (e) {
-                console.error("Error loading saved data", e);
-                resetToDefaults(true);
+        /* =========================================================================
+           3. TOURNAMENT LOGIC (Queue-based Elimination)
+           ========================================================================= */
+        let activePool = []; let nextPool = []; let currentMatch = { t1: "", t2: "" }; let roundNum = 1;
+
+        function shuffle(arr) {
+            let s = [...arr];
+            for(let i = s.length-1; i>0; i--){ const j = Math.floor(Math.random()*(i+1)); [s[i], s[j]] = [s[j], s[i]]; }
+            return s;
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+
+            // Manage BGs
+            if(id === 'game-screen') {
+                document.getElementById('home-bg-layer').style.display = 'none';
+                document.getElementById('game-bg-layer').style.display = 'block';
+            } else {
+                document.getElementById('home-bg-layer').style.display = 'block';
+                document.getElementById('game-bg-layer').style.display = 'none';
+            }
+        }
+        
+        function goHome() { 
+            document.getElementById('abort-btn').style.display = 'none';
+            showScreen('start-screen'); 
+        }
+        
+        function abortTournament() { if(confirm("End tournament early?")) goHome(); }
+
+        function openSetup() {
+            document.getElementById('abort-btn').style.display = 'block';
+            generateTeamInputs(); showScreen('setup-screen');
+        }
+        
+        function generateTeamInputs() {
+            const count = Math.max(2, Math.min(16, parseInt(document.getElementById('team-count').value) || 4));
+            const c = document.getElementById('team-inputs-container'); c.innerHTML = '';
+            for(let i=1; i<=count; i++) c.innerHTML += `<div class="team-input-row"><input type="text" id="setup-t${i}" value="Team ${i}"></div>`;
+        }
+        
+        function beginTournament() {
+            if(gData.questions.length < 4) { alert("Add at least 4 questions in Dashboard!"); return; }
+            const count = parseInt(document.getElementById('team-count').value) || 4;
+            let teams = [];
+            for(let i=1; i<=count; i++) teams.push(document.getElementById(`setup-t${i}`).value.trim() || `Team ${i}`);
+            activePool = shuffle(teams); nextPool = []; roundNum = 1;
+            nextTournamentStep();
+        }
+
+        function nextTournamentStep() {
+            document.getElementById('abort-btn').style.display = 'block';
+            if(activePool.length >= 2) {
+                currentMatch.t1 = activePool.pop(); currentMatch.t2 = activePool.pop();
+                document.getElementById('round-title').innerText = `Round ${roundNum}`;
+                document.getElementById('round-info').innerText = `Teams waiting to play this round: ${activePool.length + 2}`;
+                document.getElementById('vs-teamA').innerText = currentMatch.t1;
+                document.getElementById('vs-teamB').innerText = currentMatch.t2;
+                document.getElementById('bye-message').style.display = 'none';
+                showScreen('status-screen');
+            } else if (activePool.length === 1) {
+                let byeTeam = activePool.pop(); nextPool.push(byeTeam);
+                document.getElementById('bye-message').innerText = `🌟 ${byeTeam} gets a Bye to the next round! 🌟`;
+                document.getElementById('bye-message').style.display = 'block';
+                setTimeout(() => checkRoundEnd(), 2500);
+            } else {
+                checkRoundEnd();
             }
         }
 
-        loadSavedData();
+        function checkRoundEnd() {
+            if(nextPool.length === 1) {
+                document.getElementById('champion-name').innerText = nextPool[0];
+                playSnd('champ'); showScreen('champion-screen');
+            } else {
+                activePool = shuffle([...nextPool]); nextPool = []; roundNum++;
+                nextTournamentStep();
+            }
+        }
 
-        function switchTab(tabId) {
+        /* =========================================================================
+           4. GAMEPLAY LOGIC (Tug of War)
+           ========================================================================= */
+        let ropePos = 50; let t1Score = 0; let t2Score = 0; 
+        let t1QStack = []; let t2QStack = []; let qIndex1 = 0; let qIndex2 = 0; let gameActive = false;
+
+        function startMatch() {
+            playSnd('pull'); // Init audio context
+            t1Score = 0; t2Score = 0; ropePos = 50; gameActive = true;
+            document.getElementById('tug-group').style.left = "50%";
+            document.getElementById('t1-name').innerText = currentMatch.t1;
+            document.getElementById('t2-name').innerText = currentMatch.t2;
+
+            // Smart Randomizer Generation
+            const indices = Array.from({length: gData.questions.length}, (_, i) => i);
+            t1QStack = shuffle([...indices]); t2QStack = shuffle([...indices]);
+            qIndex1 = 0; qIndex2 = 0;
+
+            loadQ(1); loadQ(2); showScreen('game-screen');
+        }
+
+        function loadQ(tNum) {
+            const idx = tNum === 1 ? (qIndex1 % gData.questions.length) : (qIndex2 % gData.questions.length);
+            const stack = tNum === 1 ? t1QStack : t2QStack;
+            const qData = gData.questions[stack[idx]];
+
+            document.getElementById(`t${tNum}-q`).innerText = qData.q;
+            document.getElementById(`t${tNum}-photo`).innerHTML = `<img src="${qData.img}">`;
+            
+            let choices = shuffle([qData.c, ...qData.w]);
+            const cDiv = document.getElementById(`t${tNum}-cards`); cDiv.innerHTML = '';
+            document.getElementById(`team${tNum}`).classList.remove('shake');
+
+            choices.forEach(ch => {
+                const card = document.createElement('div'); card.className = 'card'; card.innerText = ch;
+                const hit = (e) => { e.preventDefault(); handleAnswer(tNum, ch, qData.c, card); };
+                card.addEventListener('touchstart', hit, {passive:false}); card.addEventListener('mousedown', hit);
+                cDiv.appendChild(card);
+            });
+        }
+
+        function handleAnswer(tNum, guess, correct, cardEl) {
+            if(!gameActive) return;
+            const tc = document.getElementById(`team${tNum}`);
+            if(Array.from(tc.querySelectorAll('.card')).some(c => c.classList.contains('disabled'))) return; 
+
+            cardEl.classList.add('pressed');
+
+            if(guess === correct) {
+                playSnd('ok'); cardEl.classList.add('correct');
+                const b = document.getElementById(tNum===1 ? 'burst-left' : 'burst-right');
+                b.style.background = `radial-gradient(circle, var(--team${tNum}-color) 0%, transparent 70%)`;
+                b.style.display = 'block'; b.style.animation = 'none';
+                setTimeout(()=> b.style.animation = 'pop 0.5s ease forwards', 10);
+
+                if(tNum === 1) t1Score++; else t2Score++;
+                
+                ropePos = 50 + (t2Score - t1Score) * (30 / gData.winScore);
+                if(t1Score >= gData.winScore) ropePos = 15; if(t2Score >= gData.winScore) ropePos = 85;
+                document.getElementById('tug-group').style.left = ropePos + "%"; playSnd('pull');
+
+                tc.querySelectorAll('.card').forEach(c => c.classList.add('disabled'));
+
+                if(t1Score >= gData.winScore || t2Score >= gData.winScore) {
+                    gameActive = false; setTimeout(() => declareMatchWinner(t1Score > t2Score ? currentMatch.t1 : currentMatch.t2), 800);
+                } else {
+                    if(tNum === 1) qIndex1++; else qIndex2++; setTimeout(() => loadQ(tNum), 800);
+                }
+            } else {
+                playSnd('no'); cardEl.classList.add('wrong');
+                tc.classList.add('shake'); setTimeout(() => tc.classList.remove('shake'), 400);
+            }
+        }
+
+        function declareMatchWinner(winnerName) {
+            playSnd('win'); document.getElementById('match-winner-text').innerText = `${winnerName} Wins!`;
+            nextPool.push(winnerName); showScreen('match-win-screen');
+        }
+
+        /* =========================================================================
+           5. DASHBOARD & DATA MANAGEMENT
+           ========================================================================= */
+        function openDashboard() {
+            document.getElementById('dash-score').value = gData.winScore;
+            
+            document.getElementById('dash-maintitle').value = gData.texts.main;
+            document.getElementById('dash-subtitle').value = gData.texts.sub;
+
+            document.getElementById('dash-font-family').value = gData.typo.family;
+            document.getElementById('dash-font-size').value = gData.typo.size;
+            document.getElementById('dash-font-color').value = gData.typo.color;
+
+            document.getElementById('dash-home-url').value = gData.bgs.home.url.startsWith('data:') ? '' : gData.bgs.home.url;
+            document.getElementById('dash-game-url').value = gData.bgs.game.url.startsWith('data:') ? '' : gData.bgs.game.url;
+            
+            buildPreview('arena-preview-box', {type: 'image', url: gData.arena});
+            buildPreview('home-bg-preview', gData.bgs.home);
+            buildPreview('game-bg-preview', gData.bgs.game);
+
+            renderQList(); switchTab('tab-q'); showScreen('dashboard-screen');
+        }
+
+        function switchTab(id) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active');
+        }
+
+        function renderQList() {
+            const c = document.getElementById('q-list'); c.innerHTML = '';
+            gData.questions.forEach((q, i) => {
+                c.innerHTML += `
+                <div class="q-card">
+                    <div class="settings-row" style="padding:10px; margin-bottom:10px;">
+                        <input type="text" id="q-${i}-t" value="${q.q}" placeholder="Question text" style="width:80%;">
+                        <button class="btn-small btn-danger" onclick="delQ(${i})">🗑️</button>
+                    </div>
+                    <div style="display:flex; gap:15px; align-items:stretch;">
+                        <div style="display:flex; flex-direction:column; gap:5px; width:30%; justify-content:center; align-items:center;">
+                            <div class="img-preview-box"><img id="q-${i}-img" src="${q.img}"></div>
+                            <input type="file" accept="image/*" onchange="readImg(event, ${i})" style="font-size:0.8em; padding:5px; min-height:44px; width:100%;">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; width:70%;">
+                            <input type="text" id="q-${i}-c" value="${q.c}" placeholder="✅ Correct" style="border:3px solid #2ED573; padding:10px; border-radius:8px;">
+                            <input type="text" id="q-${i}-w0" value="${q.w[0]}" placeholder="❌ Wrong" style="border:3px solid #FF4757; padding:10px; border-radius:8px;">
+                            <input type="text" id="q-${i}-w1" value="${q.w[1]}" placeholder="❌ Wrong" style="border:3px solid #FF4757; padding:10px; border-radius:8px;">
+                            <input type="text" id="q-${i}-w2" value="${q.w[2]}" placeholder="❌ Wrong" style="border:3px solid #FF4757; padding:10px; border-radius:8px;">
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function addQ() { gData.questions.push({q:"New Question", img:FALLBACK_IMG, c:"Correct", w:["W1","W2","W3"]}); renderQList(); 
+            const tab = document.getElementById('tab-q'); tab.scrollTop = tab.scrollHeight;
+        }
+        function delQ(i) { if(gData.questions.length<=4){alert("Min 4 questions required.");return;} gData.questions.splice(i,1); renderQList(); }
+
+        function readImg(e, idx) {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = (ev) => {
+                const img = new Image(); img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width; let h = img.height;
+                    if(w>h) { if(w>300){h*=300/w; w=300;} } else { if(h>300){w*=300/h; h=300;} }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    gData.questions[idx].img = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById(`q-${idx}-img`).src = gData.questions[idx].img;
+                }; img.src = ev.target.result;
+            }; r.readAsDataURL(f);
+        }
+
+        function handleArenaUpload(e) {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = (ev) => {
+                const img = new Image(); img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width; let h = img.height;
+                    if(w>h) { if(w>600){h*=600/w; w=600;} } else { if(h>600){w*=600/h; h=600;} }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    gData.arena = canvas.toDataURL('image/png', 0.9);
+                    buildPreview('arena-preview-box', {type: 'image', url: gData.arena});
+                }; img.src = ev.target.result;
+            }; r.readAsDataURL(f);
+        }
+
+        function handleBgUpload(e, type) {
+            const f = e.target.files[0]; const warn = document.getElementById(`${type}-bg-warn`); warn.innerText = '';
+            if(!f) return; if(f.size > 3*1024*1024) warn.innerText = '⚠️ Large file. Saving may lag. Consider using URL.';
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const isVid = f.type.startsWith('video/');
+                document.getElementById(`dash-${type}-url`).value = ev.target.result;
+                buildPreview(`${type}-bg-preview`, {type: isVid?'video':'image', url:ev.target.result});
+            }; r.readAsDataURL(f);
+        }
+
+        function saveDashboard() {
+            try {
+                gData.winScore = parseInt(document.getElementById('dash-score').value) || 5;
+                
+                gData.texts.main = document.getElementById('dash-maintitle').value || DEFAULT_DATA.texts.main;
+                gData.texts.sub = document.getElementById('dash-subtitle').value || DEFAULT_DATA.texts.sub;
+
+                gData.typo.family = document.getElementById('dash-font-family').value;
+                gData.typo.size = parseInt(document.getElementById('dash-font-size').value) || 16;
+                gData.typo.color = document.getElementById('dash-font-color').value;
+
+                const hUrl = document.getElementById('dash-home-url').value.trim();
+                gData.bgs.home.url = hUrl; gData.bgs.home.type = (hUrl.match(/\.(mp4|webm|ogg)$/i) || hUrl.startsWith('data:video/')) ? 'video' : 'image';
+                const gUrl = document.getElementById('dash-game-url').value.trim();
+                gData.bgs.game.url = gUrl; gData.bgs.game.type = (gUrl.match(/\.(mp4|webm|ogg)$/i) || gUrl.startsWith('data:video/')) ? 'video' : 'image';
+
+                for(let i=0; i<gData.questions.length; i++) {
+                    gData.questions[i].q = document.getElementById(`q-${i}-t`).value;
+                    gData.questions[i].c = document.getElementById(`q-${i}-c`).value;
+                    gData.questions[i].w[0] = document.getElementById(`q-${i}-w0`).value;
+                    gData.questions[i].w[1] = document.getElementById(`q-${i}-w1`).value;
+                    gData.questions[i].w[2] = document.getElementById(`q-${i}-w2`).value;
+                }
+                saveData(); goHome();
+            } catch(e) { alert("Error saving. Base64 media might be too large. Try using URL links."); }
+        }
+
+        function resetDefaults() {
+            if(confirm("Factory Reset? This deletes ALL custom questions, teams, and backgrounds.")) {
+                localStorage.clear(); gData = JSON.parse(JSON.stringify(DEFAULT_DATA)); saveData(); openDashboard();
+            }
         }
 
         function exportData() {
-            const dataObj = { questions: questionList, score: winScore, arena: arenaImgData, typography: typoSettings, texts: customTexts, backgrounds: backgrounds };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataObj));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "Tug_Of_War_Questions.json");
-            document.body.appendChild(dl);
-            dl.click(); dl.remove();
+            const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gData));
+            a.download = "Tug_Of_War_Master_Data.json"; document.body.appendChild(a); a.click(); a.remove();
         }
 
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
+        function importData(e) {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = (ev) => {
                 try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.questions) questionList = data.questions;
-                    if (data.score) winScore = parseInt(data.score) || DEFAULT_WIN_SCORE;
-                    if (data.arena) arenaImgData = data.arena;
-                    if (data.typography) typoSettings = data.typography;
-                    if (data.texts) customTexts = data.texts;
-                    if (data.backgrounds) backgrounds = data.backgrounds;
-
-                    saveToLocalStorage(); applyStylingAndTexts(); populateSettingsUI(); renderSettingsList();
-                    alert("✅ Settings imported successfully!");
-                } catch (err) { alert("❌ Invalid JSON file. Could not import."); }
-            };
-            reader.readAsText(file); event.target.value = '';
+                    const data = JSON.parse(ev.target.result);
+                    if(data.questions && data.bgs) gData = data;
+                    saveData(); openDashboard(); alert("Data Loaded Successfully!");
+                } catch(err) { alert("Invalid File Format"); }
+            }; r.readAsText(f); e.target.value = '';
         }
 
-        // --- MEDIA UPLOADS ---
-        function handleImageUpload(event, index) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width; let h = img.height;
-                    if (w > h) { if (w > 300) { h *= 300 / w; w = 300; } } else { if (h > 300) { w *= 300 / h; h = 300; } }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    questionList[index].photo = canvas.toDataURL('image/jpeg', 0.8);
-                    document.getElementById(`preview-${index}`).src = questionList[index].photo;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleArenaImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width; let h = img.height;
-                    if (w > h) { if (w > 800) { h *= 800 / w; w = 800; } } else { if (h > 800) { w *= 800 / h; h = 800; } }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    arenaImgData = canvas.toDataURL('image/png', 0.9);
-                    document.getElementById('arena-preview').src = arenaImgData;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleBackgroundUpload(event, type) {
-            const file = event.target.files[0];
-            const warningEl = document.getElementById(`${type}-bg-warning`);
-            warningEl.innerText = '';
-            if (!file) return;
-
-            if (file.size > 2.5 * 1024 * 1024) {
-                warningEl.innerText = '⚠️ File is large. Saving may fail. Consider using a URL link instead.';
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const isVideo = file.type.startsWith('video/');
-                document.getElementById(`${type}-bg-url`).value = e.target.result; // Set data URL in the input field
-                buildPreview(`${type}-bg-preview-container`, { type: isVideo ? 'video' : 'image', url: e.target.result });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- DASHBOARD UI ---
-        function populateSettingsUI() {
-            document.getElementById('win-score-input').value = winScore;
-            document.getElementById('arena-preview').src = arenaImgData;
-            
-            document.getElementById('text-maintitle').value = customTexts.mainTitle;
-            document.getElementById('text-subtitle').value = customTexts.subtitle;
-            document.getElementById('text-team1').value = customTexts.team1Name;
-            document.getElementById('text-team2').value = customTexts.team2Name;
-
-            document.getElementById('typo-family').value = typoSettings.family;
-            document.getElementById('typo-size').value = typoSettings.size;
-            document.getElementById('typo-color').value = typoSettings.color;
-            document.getElementById('typo-weight').value = typoSettings.weight;
-
-            document.getElementById('home-bg-url').value = backgrounds.home.url.startsWith('data:') ? '' : backgrounds.home.url;
-            document.getElementById('game-bg-url').value = backgrounds.game.url.startsWith('data:') ? '' : backgrounds.game.url;
-            
-            buildPreview('home-bg-preview-container', backgrounds.home);
-            buildPreview('game-bg-preview-container', backgrounds.game);
-        }
-
-        function openSettings() {
-            document.getElementById('home-bg-layer').style.display = 'none';
-            document.getElementById('game-bg-layer').style.display = 'none';
-            document.getElementById('main-title-display').style.display = 'none';
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('settings-screen').style.display = 'flex';
-            populateSettingsUI(); renderSettingsList(); switchTab('tab-questions'); 
-        }
-
-        function cancelSettings() { loadSavedData(); showStartScreen(); }
-
-        function renderSettingsList() {
-            const container = document.getElementById('settings-questions-list');
-            container.innerHTML = '';
-            
-            questionList.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'question-edit-card';
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; gap: 15px;">
-                        <input type="text" id="q-text-${index}" value="${item.question}" placeholder="Question text (e.g. What is this?)" style="width: 100%; font-size: 1.2em; border: 3px solid #ccc; border-radius: 8px; padding: 10px;">
-                        <button class="delete-btn" onclick="deleteQuestion(${index})">🗑️</button>
-                    </div>
-                    <div style="display: flex; gap: 15px; margin-top: 15px; align-items: stretch;">
-                        <div class="img-preview-box" style="width: 30%; display: flex; flex-direction: column; gap: 5px; align-items: center;">
-                            <img id="preview-${index}" src="${item.photo}" alt="Img" style="width:80px; height:80px;">
-                            <input type="file" id="file-${index}" accept="image/*" onchange="handleImageUpload(event, ${index})" style="width: 100%; padding: 5px;">
-                        </div>
-                        <div style="width: 70%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <input type="text" id="q-correct-${index}" value="${item.correct}" placeholder="✅ Correct Answer" style="border: 3px solid #2ED573; border-radius: 8px; padding: 10px; font-weight: bold;">
-                            <input type="text" id="q-w1-${index}" value="${item.distractors[0]}" placeholder="❌ Wrong Choice 1" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
-                            <input type="text" id="q-w2-${index}" value="${item.distractors[1]}" placeholder="❌ Wrong Choice 2" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
-                            <input type="text" id="q-w3-${index}" value="${item.distractors[2]}" placeholder="❌ Wrong Choice 3" style="border: 3px solid #FF4757; border-radius: 8px; padding: 10px;">
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function addNewQuestion() {
-            questionList.push({ question: "New Question?", photo: DEFAULT_ARENA_IMG, correct: "Correct", distractors: ["Wrong 1", "Wrong 2", "Wrong 3"] });
-            renderSettingsList();
-            const tab = document.getElementById('tab-questions');
-            tab.scrollTop = tab.scrollHeight;
-        }
-
-        function deleteQuestion(index) {
-            if(questionList.length <= 4) { alert("You must have at least 4 questions to play the game!"); return; }
-            questionList.splice(index, 1);
-            renderSettingsList();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('tow_mcq_data', JSON.stringify(questionList));
-            localStorage.setItem('tow_score_v4', winScore.toString());
-            localStorage.setItem('tow_arena_v4', arenaImgData);
-            localStorage.setItem('tow_typo_v4', JSON.stringify(typoSettings));
-            localStorage.setItem('tow_texts_v4', JSON.stringify(customTexts));
-            localStorage.setItem('tow_bgs_v4', JSON.stringify(backgrounds));
-        }
-
-        function saveSettingsAndClose() {
-            try {
-                customTexts.mainTitle = document.getElementById('text-maintitle').value || DEFAULT_TEXTS.mainTitle;
-                customTexts.subtitle = document.getElementById('text-subtitle').value || DEFAULT_TEXTS.subtitle;
-                customTexts.team1Name = document.getElementById('text-team1').value || DEFAULT_TEXTS.team1Name;
-                customTexts.team2Name = document.getElementById('text-team2').value || DEFAULT_TEXTS.team2Name;
-
-                typoSettings.family = document.getElementById('typo-family').value;
-                typoSettings.size = parseInt(document.getElementById('typo-size').value) || 16;
-                typoSettings.color = document.getElementById('typo-color').value;
-                typoSettings.weight = document.getElementById('typo-weight').value;
-                
-                const homeUrl = document.getElementById('home-bg-url').value.trim();
-                backgrounds.home.url = homeUrl;
-                backgrounds.home.type = (homeUrl.match(/\.(mp4|webm|ogg)$/i) || homeUrl.startsWith('data:video/')) ? 'video' : 'image';
-
-                const gameUrl = document.getElementById('game-bg-url').value.trim();
-                backgrounds.game.url = gameUrl;
-                backgrounds.game.type = (gameUrl.match(/\.(mp4|webm|ogg)$/i) || gameUrl.startsWith('data:video/')) ? 'video' : 'image';
-                
-                for (let i = 0; i < questionList.length; i++) {
-                    questionList[i].question = document.getElementById(`q-text-${i}`).value;
-                    questionList[i].correct = document.getElementById(`q-correct-${i}`).value;
-                    questionList[i].distractors[0] = document.getElementById(`q-w1-${i}`).value;
-                    questionList[i].distractors[1] = document.getElementById(`q-w2-${i}`).value;
-                    questionList[i].distractors[2] = document.getElementById(`q-w3-${i}`).value;
-                }
-                winScore = parseInt(document.getElementById('win-score-input').value) || 5;
-
-                saveToLocalStorage();
-                applyStylingAndTexts();
-                document.getElementById('arena-main-img').src = arenaImgData;
-
-                showStartScreen();
-            } catch (e) {
-                alert("Error saving! Check data sizes (especially uploaded backgrounds) or try using URLs instead.");
-            }
-        }
-
-        function resetToDefaults(silent = false) {
-            if(silent || confirm("Are you sure? This will delete all custom questions, images, and texts.")) {
-                localStorage.clear();
-                questionList = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)); 
-                winScore = DEFAULT_WIN_SCORE;
-                arenaImgData = DEFAULT_ARENA_IMG;
-                typoSettings = {...DEFAULT_TYPO};
-                customTexts = {...DEFAULT_TEXTS};
-                backgrounds = JSON.parse(JSON.stringify(DEFAULT_BGS));
-                
-                if(!silent) { populateSettingsUI(); renderSettingsList(); applyStylingAndTexts(); }
-            }
-        }
-
-        function showStartScreen() {
-            document.getElementById('home-bg-layer').style.display = 'block';
-            document.getElementById('game-bg-layer').style.display = 'none';
-            document.getElementById('main-title-display').style.display = 'block';
-            document.getElementById('settings-screen').style.display = 'none';
-            document.getElementById('win-overlay').style.display = 'none';
-            document.getElementById('main-layout').style.display = 'none'; 
-            document.getElementById('in-game-controls').style.display = 'none';
-            document.getElementById('start-screen').style.display = 'flex';
-        }
-
-        // --- GAMEPLAY ENGINE (Audio API & Mechanics) ---
-        let gameOver = false; let ropePos = 50; let t1Stack = [], t2Stack = []; let t1Index = 0, t2Index = 0; let audioCtx = null;
-        
-        function playSound(type) {
-            try {
-                if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                
-                if (type === 'correct') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.15);
-                    gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
-                } else if (type === 'wrong') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
-                    gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
-                } else if (type === 'pull') {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-                    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2);
-                } else if (type === 'win') {
-                    [440, 554.37, 659.25, 880, 1108.73, 1318.51].forEach((f, i) => {
-                        const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-                        const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-                        g.gain.setValueAtTime(0, now + i*0.08); g.gain.linearRampToValueAtTime(0.4, now + i*0.08 + 0.04);
-                        g.gain.linearRampToValueAtTime(0, now + i*0.08 + 0.6); o.start(now + i*0.08); o.stop(now + i*0.08 + 0.6);
-                    });
-                }
-            } catch(e) {}
-        }
-
-        function shuffle(arr) {
-            let shuffled = [...arr];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
-
-        function resetFeedback(teamNum) {
-            const tc = document.getElementById(`team${teamNum}`);
-            tc.querySelectorAll('.card').forEach(c => c.classList.remove('pressed', 'correct', 'wrong', 'disabled'));
-            tc.classList.remove('shake');
-        }
-
-        function triggerBurst(teamNum) {
-            const burst = document.getElementById(teamNum === 1 ? 'burst-left' : 'burst-right');
-            burst.style.background = `radial-gradient(circle, var(--team${teamNum}-color) 0%, transparent 70%)`;
-            burst.style.display = 'block'; burst.style.animation = 'none';
-            setTimeout(() => burst.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 10);
-        }
-
-        function loadQuestion(teamNum) {
-            let index = teamNum === 1 ? t1Index : t2Index; let stack = teamNum === 1 ? t1Stack : t2Stack;
-            const container = document.getElementById(`t${teamNum}-cards`);
-            const qDisplay = document.getElementById(`t${teamNum}-question-display`);
-
-            resetFeedback(teamNum);
-            const target = questionList[stack[index % questionList.length]];
-            qDisplay.innerText = target.question;
-            document.getElementById(`t${teamNum}-photo`).innerHTML = `<img src="${target.photo}">`;
-            
-            // Randomizer scrambles choices every load
-            let choices = [target.correct, ...target.distractors];
-            choices = shuffle(choices);
-            container.innerHTML = ''; 
-
-            choices.forEach(choice => {
-                const card = document.createElement('div'); card.className = 'card'; card.innerText = choice;
-                const handleInput = (e) => { e.preventDefault(); handleGuess(teamNum, choice, target.correct, card); };
-                card.addEventListener('touchstart', handleInput, {passive: false});
-                card.addEventListener('mousedown', handleInput);
-                container.appendChild(card);
-            });
-        }
-
-        function handleGuess(teamNum, guess, correctWord, clickedCard) {
-            if (gameOver) return;
-            const tc = document.getElementById(`team${teamNum}`);
-            const allCards = tc.querySelectorAll('.card');
-
-            if (Array.from(allCards).some(c => c.classList.contains('disabled'))) return;
-
-            resetFeedback(teamNum); clickedCard.classList.add('pressed');
-
-            if (guess === correctWord) {
-                playSound('correct'); clickedCard.classList.add('correct'); triggerBurst(teamNum);
-                if (teamNum === 1) t1Index++; else t2Index++;
-                
-                ropePos = 50 + (t2Index - t1Index) * (25 / winScore);
-                if (t1Index >= winScore) ropePos = 25; else if (t2Index >= winScore) ropePos = 75;
-
-                document.getElementById('tug-group').style.left = ropePos + "%"; playSound('pull');
-                allCards.forEach(c => c.classList.add('disabled'));
-
-                if (t1Index >= winScore || t2Index >= winScore) setTimeout(() => checkWinCondition(), 700); 
-                else setTimeout(() => loadQuestion(teamNum), 700);
-            } else {
-                playSound('wrong'); clickedCard.classList.add('wrong'); tc.classList.add('shake');
-            }
-        }
-
-        function checkWinCondition() {
-            if (t1Index >= winScore) endGame(`${customTexts.team1Name} Wins!`);
-            else if (t2Index >= winScore) endGame(`${customTexts.team2Name} Wins!`);
-        }
-
-        function endGame(message) {
-            gameOver = true; playSound('win');
-            document.getElementById('win-text-display').innerText = message;
-            document.getElementById('in-game-controls').style.display = 'none';
-            document.getElementById('win-overlay').style.display = 'flex';
-        }
-
-        function restartMatch() { if(confirm("Restart the current game?")) startGame(); }
-
-        function startGame() {
-            if (!questionList || questionList.length < 4) { alert("Add at least 4 questions in the Dashboard to play!"); return; }
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-            } catch (e) {}
-            
-            document.getElementById('arena-main-img').src = arenaImgData;
-            document.getElementById('main-title-display').style.display = 'block';
-            
-            // Switch Backgrounds
-            document.getElementById('home-bg-layer').style.display = 'none';
-            document.getElementById('game-bg-layer').style.display = 'block';
-
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('win-overlay').style.display = 'none';
-            document.getElementById('main-layout').style.display = 'flex'; 
-            document.getElementById('in-game-controls').style.display = 'flex';
-            
-            gameOver = false; ropePos = 50; t1Index = 0; t2Index = 0;
-            document.getElementById('tug-group').style.left = "50%";
-
-            const indices = Array.from({length: questionList.length}, (_, i) => i);
-            t1Stack = shuffle([...indices]); t2Stack = shuffle([...indices]);
-            loadQuestion(1); loadQuestion(2);
-        }
-        
-        // Initialize Default View
-        showStartScreen();
+        // Initialize display
+        showScreen('start-screen');
     </script>
 </body>
 </html>
