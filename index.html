@@ -143,6 +143,7 @@
         .settings-row label { font-size: 1.2em; flex-shrink: 0; width: 35%; }
         .settings-row input[type="text"], .settings-row input[type="number"], .settings-row select { padding: 12px; border: 3px solid #ccc; border-radius: 10px; font-size: 1.2em; flex-grow: 1; width: 100%; box-sizing: border-box; min-height: 44px;}
         .settings-row input[type="color"] { height: 50px; width: 100px; cursor: pointer; border: 3px solid #ccc; border-radius: 10px; }
+        .settings-row input[type="range"] { flex-grow: 1; cursor: pointer; }
 
         .q-card { background: #fff; padding: 15px; border: 3px solid #dee2e6; border-radius: 15px; margin-bottom: 15px; text-align: left; }
         .img-preview-box { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 3px solid var(--text-dark); background: #eee; flex-shrink: 0; display:flex; align-items:center; justify-content:center; overflow: hidden;}
@@ -159,7 +160,10 @@
         #team2 { background: var(--team2-bg); }
 
         .team-title { font-size: 2.5em; margin: 0 0 10px 0; color: white; text-transform: uppercase; -webkit-text-stroke: 1.5px var(--text-dark); }
+        
         .question-box { background: var(--text-dark); color: #fff; padding: 10px 20px; border-radius: 15px; font-size: 1.3em; margin-bottom: 10px; width: 80%; min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center; border: 3px solid white;}
+        /* Auto-Expand Layout for Questions without Images */
+        .question-box.no-image { min-height: 180px; font-size: 2.2em; padding: 20px 30px; margin-bottom: 25px; transition: all 0.3s ease; }
         
         .photo-display { width: 160px; height: 160px; background: white; border: 6px solid var(--text-dark); border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; overflow: hidden; animation: float 3s ease-in-out infinite; box-shadow: 0 10px 0 rgba(0,0,0,0.2);}
         .photo-display img { width: 100%; height: 100%; object-fit: cover; }
@@ -202,6 +206,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Background Music Audio Tag -->
+    <audio id="bgm-audio" loop preload="auto"></audio>
 
     <!-- Dynamic Background Layers -->
     <div id="home-bg-layer" class="bg-layer css-bg"></div>
@@ -302,7 +309,8 @@
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('tab-q')">❓ Questions</button>
                 <button class="tab-btn" onclick="switchTab('tab-txt')">✏️ Texts</button>
-                <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & BGs</button>
+                <!-- Changed to full spelling "Backgrounds" -->
+                <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & Backgrounds</button>
                 <button class="tab-btn" onclick="switchTab('tab-data')">💾 Save / Load</button>
             </div>
             
@@ -355,7 +363,22 @@
                         <input type="color" id="dash-font-color" value="#2C3E50">
                     </div>
 
-                    <h3 style="margin-top:20px;">Media & Backgrounds</h3>
+                    <h3 style="margin-top:20px;">Music & Backgrounds</h3>
+                    <!-- Background Music Settings Added Here -->
+                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; background: #eef2f5;">
+                        <label>🎵 Background Music (e.g. Super Mario Loop):</label>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="dash-bgm-url" placeholder="URL of MP3 or leave blank for silent">
+                                <input type="file" accept="audio/*" onchange="handleBgmUpload(event)" style="min-height: 44px; padding: 10px; background: white;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-row" style="background: #eef2f5;">
+                        <label>🔊 Music Volume:</label>
+                        <input type="range" id="dash-bgm-volume" min="0" max="1" step="0.05" value="0.3" oninput="updateLiveVolume(this.value)">
+                    </div>
+
                     <div class="settings-row">
                         <label>Center Arena Image:</label>
                         <div style="display:flex; gap:10px; width:100%; align-items:center;">
@@ -431,24 +454,36 @@
                 home: { type: "video", url: "tug.mp4" }, 
                 game: { type: "css", url: "" } 
             },
+            // Background Music defaults empty so user can upload their own
+            backgroundMusic: { url: "", volume: 0.3 },
             arena: DEFAULT_ARENA_IMG,
             questions: [
                 { q: "What animal is this?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/120px-Cat03.jpg", c: "Cat", w: ["Dog", "Mouse", "Rabbit"] },
                 { q: "Identify this animal:", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Collage_of_Nine_Dogs.jpg/120px-Collage_of_Nine_Dogs.jpg", c: "Dog", w: ["Wolf", "Fox", "Bear"] },
                 { q: "What fruit is red?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/120px-Red_Apple.jpg", c: "Apple", w: ["Banana", "Grape", "Orange"] },
-                { q: "What fruit is yellow?", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/120px-Banana-Single.jpg", c: "Banana", w: ["Apple", "Cherry", "Plum"] }
+                { q: "What is 5 + 5?", img: "", c: "10", w: ["15", "55", "5"] } // Example of image-less auto expansion
             ]
         };
 
         let gData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+        // Attempt to start BGM smoothly upon user interaction
+        let bgmStarted = false;
+        document.body.addEventListener('click', () => {
+            const bgm = document.getElementById('bgm-audio');
+            if (!bgmStarted && bgm.src && bgm.paused) {
+                bgm.play().then(() => { bgmStarted = true; }).catch(e => {});
+            }
+        });
 
         function loadData() {
             const saved = localStorage.getItem('tow_master_data_v3');
             if(saved) {
                 try { gData = JSON.parse(saved); } catch(e) { console.error(e); }
             }
-            // Ensure backwards compatibility if adding new keys like inGameTitle
+            // Ensure backwards compatibility if adding new keys
             if(!gData.texts.inGameTitle) gData.texts.inGameTitle = DEFAULT_DATA.texts.inGameTitle;
+            if(!gData.backgroundMusic) gData.backgroundMusic = JSON.parse(JSON.stringify(DEFAULT_DATA.backgroundMusic));
             
             applySettings();
         }
@@ -473,6 +508,17 @@
             // Backgrounds
             renderBg('home-bg-layer', gData.bgs.home);
             renderBg('game-bg-layer', gData.bgs.game);
+
+            // Background Music
+            const bgm = document.getElementById('bgm-audio');
+            if (gData.backgroundMusic.url && bgm.src !== gData.backgroundMusic.url) {
+                bgm.src = gData.backgroundMusic.url;
+                if(bgmStarted) bgm.play().catch(e => {});
+            } else if (!gData.backgroundMusic.url) {
+                bgm.removeAttribute('src');
+                bgm.load();
+            }
+            bgm.volume = gData.backgroundMusic.volume;
 
             // Arena
             document.getElementById('arena-img').src = gData.arena;
@@ -507,7 +553,7 @@
         loadData();
 
         /* =========================================================================
-           2. AUDIO SYSTEM (Web Audio API)
+           2. AUDIO SYSTEM (Web Audio API) for UI Sounds
            ========================================================================= */
         let audioCtx;
         function playSnd(type) {
@@ -553,7 +599,7 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             document.getElementById(id).classList.add('active-screen');
 
-            // Manage BGs
+            // Manage Backgrounds visibility
             if(id === 'game-screen') {
                 document.getElementById('home-bg-layer').style.display = 'none';
                 document.getElementById('game-bg-layer').style.display = 'block';
@@ -646,8 +692,20 @@
             const stack = tNum === 1 ? t1QStack : t2QStack;
             const qData = gData.questions[stack[idx]];
 
-            document.getElementById(`t${tNum}-q`).innerText = qData.q;
-            document.getElementById(`t${tNum}-photo`).innerHTML = `<img src="${qData.img}">`;
+            const qBox = document.getElementById(`t${tNum}-q`);
+            const photoDiv = document.getElementById(`t${tNum}-photo`);
+            
+            qBox.innerText = qData.q;
+            
+            // Check if Image exists/is not empty to Auto-Expand Text
+            if (!qData.img || qData.img.trim() === "" || qData.img === FALLBACK_IMG) {
+                photoDiv.style.display = 'none';
+                qBox.classList.add('no-image');
+            } else {
+                photoDiv.style.display = 'flex';
+                photoDiv.innerHTML = `<img src="${qData.img}">`;
+                qBox.classList.remove('no-image');
+            }
             
             let choices = shuffle([qData.c, ...qData.w]);
             const cDiv = document.getElementById(`t${tNum}-cards`); cDiv.innerHTML = '';
@@ -713,6 +771,10 @@
             document.getElementById('dash-font-size').value = gData.typo.size;
             document.getElementById('dash-font-color').value = gData.typo.color;
 
+            // Load BGM Settings
+            document.getElementById('dash-bgm-url').value = gData.backgroundMusic.url;
+            document.getElementById('dash-bgm-volume').value = gData.backgroundMusic.volume;
+
             document.getElementById('dash-home-url').value = gData.bgs.home.url.startsWith('data:') ? '' : gData.bgs.home.url;
             document.getElementById('dash-game-url').value = gData.bgs.game.url.startsWith('data:') ? '' : gData.bgs.game.url;
             
@@ -729,7 +791,7 @@
             document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active');
         }
 
-        // --- NEW SYNC HELPER FUNCTION ---
+        // --- SYNC HELPER FUNCTION TO PREVENT QUESTION DELETION ---
         function syncQuestionsFromUI() {
             for(let i=0; i<gData.questions.length; i++) {
                 const qInput = document.getElementById(`q-${i}-t`);
@@ -747,6 +809,7 @@
         function renderQList() {
             const c = document.getElementById('q-list'); c.innerHTML = '';
             gData.questions.forEach((q, i) => {
+                const displayImg = q.img || FALLBACK_IMG;
                 c.innerHTML += `
                 <div class="q-card">
                     <div class="settings-row" style="padding:10px; margin-bottom:10px;">
@@ -755,7 +818,7 @@
                     </div>
                     <div style="display:flex; gap:15px; align-items:stretch;">
                         <div style="display:flex; flex-direction:column; gap:5px; width:30%; justify-content:center; align-items:center;">
-                            <div class="img-preview-box"><img id="q-${i}-img" src="${q.img}"></div>
+                            <div class="img-preview-box"><img id="q-${i}-img" src="${displayImg}"></div>
                             <input type="file" accept="image/*" onchange="readImg(event, ${i})" style="font-size:0.8em; padding:5px; min-height:44px; width:100%;">
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; width:70%;">
@@ -770,15 +833,16 @@
         }
 
         function addQ() { 
-            syncQuestionsFromUI(); // Added this sync
-            gData.questions.push({q:"New Question", img:FALLBACK_IMG, c:"Correct", w:["W1","W2","W3"]}); 
+            syncQuestionsFromUI(); // Protects unsaved edits
+            // New questions default with empty image string so they expand text automatically
+            gData.questions.push({q:"New Question", img:"", c:"Correct", w:["W1","W2","W3"]}); 
             renderQList(); 
             const tab = document.getElementById('tab-q'); tab.scrollTop = tab.scrollHeight;
         }
         
         function delQ(i) { 
             if(gData.questions.length<=4){alert("Min 4 questions required.");return;} 
-            syncQuestionsFromUI(); // Added this sync
+            syncQuestionsFromUI(); // Protects unsaved edits
             gData.questions.splice(i,1); 
             renderQList(); 
         }
@@ -820,6 +884,26 @@
             }; r.readAsDataURL(f);
         }
 
+        // BGM Handler for the live player update in Dashboard
+        function handleBgmUpload(e) {
+            const f = e.target.files[0];
+            if(!f) return;
+            if(f.size > 2*1024*1024) alert('⚠️ Large file. Saving to browser may cause lag. Consider using a shorter loop or direct URL instead.');
+            const r = new FileReader();
+            r.onload = (ev) => {
+                document.getElementById('dash-bgm-url').value = ev.target.result;
+                const bgm = document.getElementById('bgm-audio');
+                bgm.src = ev.target.result;
+                bgm.play().catch(()=>{});
+                bgmStarted = true;
+            };
+            r.readAsDataURL(f);
+        }
+
+        function updateLiveVolume(val) {
+            document.getElementById('bgm-audio').volume = val;
+        }
+
         function saveDashboard() {
             try {
                 gData.winScore = parseInt(document.getElementById('dash-score').value) || 5;
@@ -832,12 +916,14 @@
                 gData.typo.size = parseInt(document.getElementById('dash-font-size').value) || 16;
                 gData.typo.color = document.getElementById('dash-font-color').value;
 
+                gData.backgroundMusic.url = document.getElementById('dash-bgm-url').value.trim();
+                gData.backgroundMusic.volume = parseFloat(document.getElementById('dash-bgm-volume').value);
+
                 const hUrl = document.getElementById('dash-home-url').value.trim();
                 gData.bgs.home.url = hUrl; gData.bgs.home.type = (hUrl.match(/\.(mp4|webm|ogg)$/i) || hUrl.startsWith('data:video/')) ? 'video' : 'image';
                 const gUrl = document.getElementById('dash-game-url').value.trim();
                 gData.bgs.game.url = gUrl; gData.bgs.game.type = (gUrl.match(/\.(mp4|webm|ogg)$/i) || gUrl.startsWith('data:video/')) ? 'video' : 'image';
 
-                // Changed from manual loop to utilizing our new sync helper
                 syncQuestionsFromUI();
                 
                 saveData(); goHome();
