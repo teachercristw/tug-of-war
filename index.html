@@ -207,8 +207,10 @@
 </head>
 <body>
 
-    <!-- Background Music Audio Tag -->
+    <!-- Background Music Audio Tag (For MP3s) -->
     <audio id="bgm-audio" loop preload="auto"></audio>
+    <!-- Hidden Container for YouTube Background Audio -->
+    <div id="yt-container" style="position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none;"></div>
 
     <!-- Dynamic Background Layers -->
     <div id="home-bg-layer" class="bg-layer css-bg"></div>
@@ -309,7 +311,6 @@
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('tab-q')">❓ Questions</button>
                 <button class="tab-btn" onclick="switchTab('tab-txt')">✏️ Texts</button>
-                <!-- Changed to full spelling "Backgrounds" -->
                 <button class="tab-btn" onclick="switchTab('tab-style')">🎨 Style & Backgrounds</button>
                 <button class="tab-btn" onclick="switchTab('tab-data')">💾 Save / Load</button>
             </div>
@@ -364,13 +365,14 @@
                     </div>
 
                     <h3 style="margin-top:20px;">Music & Backgrounds</h3>
-                    <!-- Background Music Settings Added Here -->
+                    <!-- Background Music Settings -->
                     <div class="settings-row" style="flex-direction:column; align-items:flex-start; background: #eef2f5;">
-                        <label>🎵 Background Music (e.g. Super Mario Loop):</label>
+                        <label>🎵 Background Music (MP3 or YouTube Link):</label>
                         <div style="display:flex; gap:10px; width:100%;">
                             <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                                <input type="text" id="dash-bgm-url" placeholder="URL of MP3 or leave blank for silent">
+                                <input type="text" id="dash-bgm-url" placeholder="Paste YouTube Link OR Audio URL (leave blank for silent)">
                                 <input type="file" accept="audio/*" onchange="handleBgmUpload(event)" style="min-height: 44px; padding: 10px; background: white;">
+                                <small style="color: #666;">Note: TikTok, Spotify, etc. block background audio. Use YouTube links or upload an MP3.</small>
                             </div>
                         </div>
                     </div>
@@ -454,7 +456,7 @@
                 home: { type: "video", url: "tug.mp4" }, 
                 game: { type: "css", url: "" } 
             },
-            // Background Music defaults empty so user can upload their own
+            // Background Music defaults empty so user can upload their own or paste YT link
             backgroundMusic: { url: "", volume: 0.3 },
             arena: DEFAULT_ARENA_IMG,
             questions: [
@@ -467,12 +469,28 @@
 
         let gData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-        // Attempt to start BGM smoothly upon user interaction
+        // --- YOUTUBE ID EXTRACTOR ---
+        function getYouTubeID(url) {
+            if (!url) return null;
+            const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        // --- GLOBAL AUDIO TRIGGERS ---
         let bgmStarted = false;
         document.body.addEventListener('click', () => {
-            const bgm = document.getElementById('bgm-audio');
-            if (!bgmStarted && bgm.src && bgm.paused) {
-                bgm.play().then(() => { bgmStarted = true; }).catch(e => {});
+            if (!bgmStarted) {
+                bgmStarted = true;
+                // Standard Audio
+                const bgm = document.getElementById('bgm-audio');
+                if (bgm && bgm.src && bgm.paused) bgm.play().catch(e => {});
+                
+                // YouTube Iframe Command
+                const ytIframe = document.getElementById('yt-iframe');
+                if (ytIframe && ytIframe.contentWindow) {
+                    ytIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: "" }), '*');
+                }
             }
         });
 
@@ -481,7 +499,6 @@
             if(saved) {
                 try { gData = JSON.parse(saved); } catch(e) { console.error(e); }
             }
-            // Ensure backwards compatibility if adding new keys
             if(!gData.texts.inGameTitle) gData.texts.inGameTitle = DEFAULT_DATA.texts.inGameTitle;
             if(!gData.backgroundMusic) gData.backgroundMusic = JSON.parse(JSON.stringify(DEFAULT_DATA.backgroundMusic));
             
@@ -509,20 +526,43 @@
             renderBg('home-bg-layer', gData.bgs.home);
             renderBg('game-bg-layer', gData.bgs.game);
 
-            // Background Music
-            const bgm = document.getElementById('bgm-audio');
-            if (gData.backgroundMusic.url && bgm.src !== gData.backgroundMusic.url) {
-                bgm.src = gData.backgroundMusic.url;
-                if(bgmStarted) bgm.play().catch(e => {});
-            } else if (!gData.backgroundMusic.url) {
-                bgm.removeAttribute('src');
-                bgm.load();
+            // Background Music & YouTube Setup
+            const bgmAudio = document.getElementById('bgm-audio');
+            const ytContainer = document.getElementById('yt-container');
+            const url = gData.backgroundMusic.url || "";
+            const ytId = getYouTubeID(url);
+
+            if (ytId) {
+                // Handle YouTube
+                bgmAudio.pause();
+                bgmAudio.removeAttribute('src');
+                
+                // Rebuild only if ID changed to prevent resetting mid-song
+                if (ytContainer.getAttribute('data-current-id') !== ytId) {
+                    ytContainer.setAttribute('data-current-id', ytId);
+                    // Embeds YouTube invisibly, enabled for postMessage API
+                    ytContainer.innerHTML = `<iframe id="yt-iframe" src="https://www.youtube.com/embed/${ytId}?autoplay=1&loop=1&playlist=${ytId}&enablejsapi=1" frameborder="0" allow="autoplay"></iframe>`;
+                    
+                    // Wait for iframe to init before setting volume
+                    setTimeout(() => { updateLiveVolume(gData.backgroundMusic.volume); }, 1500);
+                }
+            } else {
+                // Handle Standard Audio File
+                ytContainer.innerHTML = ''; // Kill YT player
+                ytContainer.setAttribute('data-current-id', '');
+                
+                if (url && bgmAudio.src !== url) {
+                    bgmAudio.src = url;
+                    if(bgmStarted) bgmAudio.play().catch(e => {});
+                } else if (!url) {
+                    bgmAudio.removeAttribute('src');
+                    bgmAudio.load();
+                }
+                bgmAudio.volume = gData.backgroundMusic.volume;
             }
-            bgm.volume = gData.backgroundMusic.volume;
 
             // Arena
             document.getElementById('arena-img').src = gData.arena;
-            // Fallback if the user's tug.png isn't found
             document.getElementById('arena-img').onerror = function() {
                 this.onerror = null; 
                 this.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='60'><rect width='200' height='20' y='20' fill='%23A0522D'/><circle cx='30' cy='30' r='20' fill='%23FF5E7E'/><circle cx='170' cy='30' r='20' fill='%2300D2FF'/></svg>";
@@ -795,7 +835,6 @@
         function syncQuestionsFromUI() {
             for(let i=0; i<gData.questions.length; i++) {
                 const qInput = document.getElementById(`q-${i}-t`);
-                // Check if the input exists in the DOM to avoid errors
                 if(qInput) {
                     gData.questions[i].q = qInput.value;
                     gData.questions[i].c = document.getElementById(`q-${i}-c`).value;
@@ -834,7 +873,6 @@
 
         function addQ() { 
             syncQuestionsFromUI(); // Protects unsaved edits
-            // New questions default with empty image string so they expand text automatically
             gData.questions.push({q:"New Question", img:"", c:"Correct", w:["W1","W2","W3"]}); 
             renderQList(); 
             const tab = document.getElementById('tab-q'); tab.scrollTop = tab.scrollHeight;
@@ -884,7 +922,7 @@
             }; r.readAsDataURL(f);
         }
 
-        // BGM Handler for the live player update in Dashboard
+        // BGM Handler
         function handleBgmUpload(e) {
             const f = e.target.files[0];
             if(!f) return;
@@ -900,8 +938,17 @@
             r.readAsDataURL(f);
         }
 
+        // Synchronize live volume slider with both standard audio and YouTube iframe
         function updateLiveVolume(val) {
-            document.getElementById('bgm-audio').volume = val;
+            gData.backgroundMusic.volume = parseFloat(val);
+            
+            const bgm = document.getElementById('bgm-audio');
+            if (bgm) bgm.volume = val;
+            
+            const ytIframe = document.getElementById('yt-iframe');
+            if (ytIframe && ytIframe.contentWindow) {
+                ytIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [val * 100] }), '*');
+            }
         }
 
         function saveDashboard() {
