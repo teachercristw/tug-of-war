@@ -729,6 +729,21 @@
             document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active');
         }
 
+        // --- NEW SYNC HELPER FUNCTION ---
+        function syncQuestionsFromUI() {
+            for(let i=0; i<gData.questions.length; i++) {
+                const qInput = document.getElementById(`q-${i}-t`);
+                // Check if the input exists in the DOM to avoid errors
+                if(qInput) {
+                    gData.questions[i].q = qInput.value;
+                    gData.questions[i].c = document.getElementById(`q-${i}-c`).value;
+                    gData.questions[i].w[0] = document.getElementById(`q-${i}-w0`).value;
+                    gData.questions[i].w[1] = document.getElementById(`q-${i}-w1`).value;
+                    gData.questions[i].w[2] = document.getElementById(`q-${i}-w2`).value;
+                }
+            }
+        }
+
         function renderQList() {
             const c = document.getElementById('q-list'); c.innerHTML = '';
             gData.questions.forEach((q, i) => {
@@ -754,10 +769,19 @@
             });
         }
 
-        function addQ() { gData.questions.push({q:"New Question", img:FALLBACK_IMG, c:"Correct", w:["W1","W2","W3"]}); renderQList(); 
+        function addQ() { 
+            syncQuestionsFromUI(); // Added this sync
+            gData.questions.push({q:"New Question", img:FALLBACK_IMG, c:"Correct", w:["W1","W2","W3"]}); 
+            renderQList(); 
             const tab = document.getElementById('tab-q'); tab.scrollTop = tab.scrollHeight;
         }
-        function delQ(i) { if(gData.questions.length<=4){alert("Min 4 questions required.");return;} gData.questions.splice(i,1); renderQList(); }
+        
+        function delQ(i) { 
+            if(gData.questions.length<=4){alert("Min 4 questions required.");return;} 
+            syncQuestionsFromUI(); // Added this sync
+            gData.questions.splice(i,1); 
+            renderQList(); 
+        }
 
         function readImg(e, idx) {
             const f = e.target.files[0]; if(!f) return; const r = new FileReader();
@@ -813,13 +837,9 @@
                 const gUrl = document.getElementById('dash-game-url').value.trim();
                 gData.bgs.game.url = gUrl; gData.bgs.game.type = (gUrl.match(/\.(mp4|webm|ogg)$/i) || gUrl.startsWith('data:video/')) ? 'video' : 'image';
 
-                for(let i=0; i<gData.questions.length; i++) {
-                    gData.questions[i].q = document.getElementById(`q-${i}-t`).value;
-                    gData.questions[i].c = document.getElementById(`q-${i}-c`).value;
-                    gData.questions[i].w[0] = document.getElementById(`q-${i}-w0`).value;
-                    gData.questions[i].w[1] = document.getElementById(`q-${i}-w1`).value;
-                    gData.questions[i].w[2] = document.getElementById(`q-${i}-w2`).value;
-                }
+                // Changed from manual loop to utilizing our new sync helper
+                syncQuestionsFromUI();
+                
                 saveData(); goHome();
             } catch(e) { alert("Error saving. Base64 media might be too large. Try using URL links."); }
         }
